@@ -4,4 +4,19 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["psycopg[binary]>=3.2.0", "sqlalchemy>=2.0.0"]
+
+
+[tool.flake8]
+exclude = [
+    ".venv",
+    ".git",
+    "__pycache__",
+    "*.egg-info",
+    ".eggs",
+    "build",
+    "dist",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+]
