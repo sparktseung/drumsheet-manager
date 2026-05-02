@@ -1,0 +1,3 @@
+import uuid
+
+SONG_MASTER_LIST_UUID = uuid.UUID("1e088bc4-e188-4705-b6ef-411f67147076")
