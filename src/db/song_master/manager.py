@@ -115,7 +115,7 @@ class SongMasterManager:
                 ),
                 return_dtype=pl.String,
             )
-            .alias("uuid")
+            .alias("song_id")
         )
 
         return df
@@ -229,7 +229,7 @@ class SongMasterManager:
                 ),
                 return_dtype=pl.String,
             )
-            .alias("uuid"),
+            .alias("song_id"),
         )
 
         df_song_audio = df.filter(pl.col("file_type") == "audio")
