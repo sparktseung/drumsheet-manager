@@ -14,6 +14,7 @@ existing postgres database for syncing.
     - Optional MuseScore source file .mscz can also be included
 """
 
+import hashlib
 import polars as pl
 from pathlib import Path
 import uuid
@@ -22,6 +23,14 @@ import uuid
 class SongMasterManager:
 
     REQUIRED_COLUMNS = {"artist_en", "song_name_en"}
+    VALID_DRUM_SHEET_EXTENSIONS = {".pdf"}
+    VALID_AUDIO_EXTENSIONS = {".mp3", ".wav"}
+    VALID_SOURCE_EXTENSIONS = {".mscz"}
+    VALID_EXTENTIONS = (
+        VALID_AUDIO_EXTENSIONS
+        | VALID_DRUM_SHEET_EXTENSIONS
+        | VALID_SOURCE_EXTENSIONS
+    )
 
     def __init__(
         self,
@@ -53,25 +62,23 @@ class SongMasterManager:
         self.uuid_seed = (
             seed if isinstance(seed, uuid.UUID) else uuid.UUID(str(seed))
         )
-        self.df_song_master_list = None
-        self.df_all_available_song_data = None
 
-    def load_song_master_list(self) -> None:
+    def get_all_songs_snapshot(self) -> list[pl.DataFrame]:
+        df_song_master = self.load_song_master()
+        df_song_audio, df_song_drum_sheet, df_song_source = (
+            self.list_all_available_song_data()
+        )
+
+        return (
+            df_song_master,
+            df_song_audio,
+            df_song_drum_sheet,
+            df_song_source,
+        )
+
+    def load_song_master(self) -> pl.DataFrame:
         """
         Load a song master CSV / Excel file.
-
-        Params
-        ------
-        file_path: str | Path
-            The path to the CSV or Excel file containing the song master list.
-            At a minimum, the csv should have these columns:
-                - artist_en (string): The name of the artist in English.
-                - song_name_en (string): The name of the song in English.
-            Other columns will also be loaded as metadata.
-        uuid_seed: str | uuid.UUID
-            A seed uuid to use for generating uuids for each row.
-            This should be a fixed uuid to ensure that the same song will
-            always have the same uuid across different runs of the function.
         """
         master_file_path = Path(self.master_file)
 
@@ -111,9 +118,12 @@ class SongMasterManager:
             .alias("uuid")
         )
 
-        self.df_song_master_list = df
+        return df
 
-    def list_all_available_song_data(self) -> pl.DataFrame:
+    def list_all_available_song_data(self) -> list[pl.DataFrame]:
+        """
+        List all available song data files in the song data folder.
+        """
         song_data_root = Path(self.song_data_folder)
 
         if not song_data_root.exists():
@@ -125,17 +135,21 @@ class SongMasterManager:
                 f"Song data path is not a directory: {song_data_root}"
             )
 
-        df_files = pl.DataFrame(
+        # get the list of all valid files
+        df = pl.DataFrame(
             {
                 "file_path": [
                     str(file_path)
                     for file_path in song_data_root.rglob("*")
                     if file_path.is_file()
+                    and file_path.suffix in self.VALID_EXTENTIONS
                 ],
             }
         )
 
-        df_files = df_files.with_columns(
+        # extract file metadata and hash the file path
+        # to get a unique identifier for each file
+        df = df.with_columns(
             pl.col("file_path")
             .map_elements(
                 lambda x: Path(x).name,
@@ -154,7 +168,44 @@ class SongMasterManager:
                 return_dtype=pl.String,
             )
             .alias("extension"),
-        ).with_columns(
+            pl.col("file_path")
+            .map_elements(
+                lambda x: int(Path(x).stat().st_mtime * 1000),
+                return_dtype=pl.Int64,
+            )
+            .cast(pl.Datetime("ms"))
+            .alias("last_modified_ts"),
+            pl.col("file_path")
+            .map_elements(
+                lambda x: hashlib.sha256(x.encode()).hexdigest(),
+                return_dtype=pl.String,
+            )
+            .alias("file_path_hash"),
+        )
+        # get file types
+        df = df.with_columns(
+            pl.col("extension")
+            .map_elements(
+                lambda ext: (
+                    "audio"
+                    if ext in self.VALID_AUDIO_EXTENSIONS
+                    else (
+                        "drum_sheet"
+                        if ext in self.VALID_DRUM_SHEET_EXTENSIONS
+                        else (
+                            "source"
+                            if ext in self.VALID_SOURCE_EXTENSIONS
+                            else "unknown"
+                        )
+                    )
+                ),
+                return_dtype=pl.String,
+            )
+            .alias("file_type")
+        )
+        # get artist_en and song_name_en from the file name
+        # assuming it follows the naming convention
+        df = df.with_columns(
             pl.col("stem")
             .str.split(" - ")
             .list.get(-2)
@@ -166,9 +217,26 @@ class SongMasterManager:
             .str.strip_chars()
             .alias("song_name_en"),
         )
+        # encode with the same uuid generation method as the master list
+        df = df.with_columns(
+            pl.struct(["artist_en", "song_name_en"])
+            .map_elements(
+                lambda row: str(
+                    uuid.uuid5(
+                        self.uuid_seed,
+                        f"{row['artist_en']}_{row['song_name_en']}",
+                    )
+                ),
+                return_dtype=pl.String,
+            )
+            .alias("uuid"),
+        )
 
-        self.df_all_available_song_data = df_files
-        return self.df_all_available_song_data
+        df_song_audio = df.filter(pl.col("file_type") == "audio")
+        df_song_drum_sheet = df.filter(pl.col("file_type") == "drum_sheet")
+        df_song_source = df.filter(pl.col("file_type") == "source")
+
+        return df_song_audio, df_song_drum_sheet, df_song_source
 
     def _generate_song_master_list_uuid(self) -> str:
         return str(uuid.uuid4())
