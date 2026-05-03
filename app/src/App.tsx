@@ -267,7 +267,7 @@ function App() {
               <tr>
                 <th>genre</th>
                 <th>artist</th>
-                <th>song_name</th>
+                <th>song name</th>
                 <th></th>
               </tr>
             </thead>
