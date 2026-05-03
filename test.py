@@ -14,7 +14,6 @@ song_master_manager = SongMasterManager(
 )
 
 # %%
-song_master_manager.load_song_master_list()
-song_master_manager.list_all_available_song_data()
+dfs = song_master_manager.get_all_songs_snapshot()
 
 # %%
