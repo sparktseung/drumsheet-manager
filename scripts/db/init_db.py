@@ -2,10 +2,6 @@ from dotenv import load_dotenv
 import os
 from sqlalchemy import (
     MetaData,
-    Table,
-    Column,
-    String,
-    DateTime,
 )
 from sqlalchemy.schema import CreateSchema
 import sqlalchemy as sa
@@ -14,6 +10,7 @@ from src.db.postgres import (
     build_song_master_table,
     build_song_audio_table,
     build_song_drum_sheet_table,
+    build_song_source_table,
 )
 
 if __name__ == "__main__":
@@ -44,28 +41,6 @@ if __name__ == "__main__":
 
     song_drum_sheet_table = build_song_drum_sheet_table(metadata, schema)
 
-    song_source_table = Table(
-        "song_source",
-        metadata,
-        Column(
-            "song_id",
-            sa.UUID,
-            sa.ForeignKey(f"{schema}.song_master.song_id"),
-            nullable=False,
-            primary_key=True,
-        ),
-        Column("file_path_hash", String(64), nullable=False),
-        Column("file_path", String(1024), nullable=False),
-        Column("file_name", String(255), nullable=False),
-        Column("stem", String(255), nullable=False),
-        Column("extension", String(16), nullable=False),
-        Column("file_type", String(32), nullable=False),
-        Column("artist_en", String(255), nullable=False),
-        Column("song_name_en", String(255), nullable=False),
-        Column("last_modified_ts", DateTime, nullable=False),
-        Column("created_at", DateTime, server_default=sa.func.now()),
-        Column("updated_at", DateTime, server_default=sa.func.now()),
-        schema=schema,
-    )
+    song_source_table = build_song_source_table(metadata, schema)
 
     metadata.create_all(engine)

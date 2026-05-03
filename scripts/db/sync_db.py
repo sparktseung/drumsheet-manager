@@ -6,6 +6,7 @@ from src.db.postgres import (
     SongMasterTable,
     SongAudioTable,
     SongDrumSheetTable,
+    SongSourceTable,
 )
 
 if __name__ == "__main__":
@@ -51,3 +52,10 @@ if __name__ == "__main__":
         table_name="song_drum_sheet",
     )
     sdst.merge(df_song_drum_sheet)
+
+    sst = SongSourceTable(
+        dsn=dsn,
+        schema=schema,
+        table_name="song_source",
+    )
+    sst.merge(df_song_source)
