@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
-import os
 from threading import Lock, Thread
 from typing import Literal
 from uuid import uuid4
@@ -42,19 +41,12 @@ def _run_sync_job(job_id: str) -> None:
 
     try:
         settings = get_settings()
-        master_file = os.getenv("MASTER_FILE")
-        song_data_folder = os.getenv("SONG_DATA_FOLDER")
-
-        if not master_file:
-            raise ValueError("MASTER_FILE is not set")
-        if not song_data_folder:
-            raise ValueError("SONG_DATA_FOLDER is not set")
 
         run_sync_once(
             dsn=settings.dsn,
             schema=settings.schema,
-            master_file=master_file,
-            song_data_folder=song_data_folder,
+            master_file=settings.master_file,
+            song_data_folder=settings.song_data_folder,
         )
     except Exception as exc:  # noqa: BLE001
         with _jobs_lock:
@@ -106,14 +98,7 @@ def get_sync_job(job_id: str) -> SyncJobRecord | None:
         job = _jobs.get(job_id)
         if job is None:
             return None
-        return SyncJobRecord(
-            job_id=job.job_id,
-            status=job.status,
-            created_at=job.created_at,
-            started_at=job.started_at,
-            finished_at=job.finished_at,
-            error=job.error,
-        )
+        return replace(job)
 
 
 def get_running_job() -> SyncJobRecord | None:
@@ -123,11 +108,4 @@ def get_running_job() -> SyncJobRecord | None:
         job = _jobs.get(_running_job_id)
         if job is None:
             return None
-        return SyncJobRecord(
-            job_id=job.job_id,
-            status=job.status,
-            created_at=job.created_at,
-            started_at=job.started_at,
-            finished_at=job.finished_at,
-            error=job.error,
-        )
+        return replace(job)

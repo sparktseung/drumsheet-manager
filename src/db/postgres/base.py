@@ -37,28 +37,32 @@ class TableBase:
 
     def __init__(
         self,
-        dsn: str,
         schema: str,
         table_name: str,
+        dsn: str | None = None,
+        engine: Engine | None = None,
     ) -> None:
         """Initialize database connection and table configuration.
 
         Params
         ------
-        dsn: str
-            Database connection string
-            (e.g., "postgresql://user:pass@localhost/db").
-            SQLAlchemy will parse this to create the engine.
         schema: str
             PostgreSQL schema name (e.g., "public", "app_schema").
             Used when reflecting the table from the database.
         table_name: str
             Name of the table this class manages.
             Must exist in the specified schema.
+        dsn: str | None
+            Database connection string used when *engine* is not provided.
+        engine: Engine | None
+            Existing SQLAlchemy engine to reuse for shared pooling.
         """
+        if engine is None and dsn is None:
+            raise ValueError("Either 'engine' or 'dsn' must be provided")
+
         self.schema = schema
         self.table_name = table_name
-        self.engine: Engine = sa.create_engine(dsn, future=True)
+        self.engine: Engine = engine or sa.create_engine(dsn, future=True)
         self._reflected_table: sa.Table | None = None
 
     def __enter__(self) -> TableBase:

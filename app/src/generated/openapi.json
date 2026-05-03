@@ -181,6 +181,130 @@
         }
       }
     },
+    "/songs/count": {
+      "get": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Count all songs",
+        "description": "Get total count from vw_all_songs for pagination.",
+        "operationId": "get_all_songs_count_songs_count_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search on artist_en or song_name_en.",
+              "title": "Q"
+            },
+            "description": "Case-insensitive search on artist_en or song_name_en."
+          },
+          {
+            "name": "in_master",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by master presence flag.",
+              "title": "In Master"
+            },
+            "description": "Filter by master presence flag."
+          },
+          {
+            "name": "audio_available",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by audio availability.",
+              "title": "Audio Available"
+            },
+            "description": "Filter by audio availability."
+          },
+          {
+            "name": "drum_sheet_available",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by drum sheet availability.",
+              "title": "Drum Sheet Available"
+            },
+            "description": "Filter by drum sheet availability."
+          },
+          {
+            "name": "source_available",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by source availability.",
+              "title": "Source Available"
+            },
+            "description": "Filter by source availability."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SongCount"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/songs/playable": {
       "get": {
         "tags": [
@@ -463,6 +587,94 @@
         }
       }
     },
+    "/songs/unplayable/count": {
+      "get": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Count unplayable songs",
+        "description": "Get total count from vw_unplayable_songs for pagination.",
+        "operationId": "get_unplayable_songs_count_songs_unplayable_count_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search on artist_en or song_name_en.",
+              "title": "Q"
+            },
+            "description": "Case-insensitive search on artist_en or song_name_en."
+          },
+          {
+            "name": "missing_audio",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter rows that are missing audio.",
+              "title": "Missing Audio"
+            },
+            "description": "Filter rows that are missing audio."
+          },
+          {
+            "name": "missing_drum_sheet",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter rows that are missing drum sheet.",
+              "title": "Missing Drum Sheet"
+            },
+            "description": "Filter rows that are missing drum sheet."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SongCount"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/songs/recent": {
       "get": {
         "tags": [
@@ -525,6 +737,58 @@
                     "$ref": "#/components/schemas/SongRow"
                   },
                   "title": "Response Get Recently Updated Songs Songs Recent Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/songs/recent/count": {
+      "get": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Count recently updated songs",
+        "description": "Get total count from vw_recently_updated_songs for pagination.",
+        "operationId": "get_recently_updated_songs_count_songs_recent_count_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search on artist_en or song_name_en.",
+              "title": "Q"
+            },
+            "description": "Case-insensitive search on artist_en or song_name_en."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SongCount"
                 }
               }
             }

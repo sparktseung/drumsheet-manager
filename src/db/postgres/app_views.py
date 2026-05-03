@@ -15,9 +15,14 @@ VW_RECENTLY_UPDATED_SONGS = "vw_recently_updated_songs"
 class AppViewManager:
     """Manage database views used by the web application."""
 
-    def __init__(self, dsn: str, schema: str) -> None:
+    def __init__(
+        self,
+        dsn: str,
+        schema: str,
+        engine: Engine | None = None,
+    ) -> None:
         self.schema = schema
-        self.engine: Engine = sa.create_engine(dsn, future=True)
+        self.engine: Engine = engine or sa.create_engine(dsn, future=True)
 
     def __enter__(self) -> AppViewManager:
         """Support context manager usage for this view manager."""

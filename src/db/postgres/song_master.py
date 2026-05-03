@@ -48,7 +48,12 @@ def build_song_master_table(
         sa.Column("artist_local", sa.String(255), nullable=True),
         sa.Column("song_name_local", sa.String(255), nullable=True),
         sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime, server_default=sa.func.now()),
+        sa.Column(
+            "updated_at",
+            sa.DateTime,
+            server_default=sa.func.now(),
+            onupdate=sa.func.now(),
+        ),
         schema=schema_name,
     )
 

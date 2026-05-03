@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 import sqlalchemy as sa
 from sqlalchemy.engine import Connection, RowMapping
+from sqlalchemy.sql.elements import ColumnElement
 
 from ..config import get_settings
 from ..dependencies import get_db_connection
@@ -18,93 +20,91 @@ VW_ALL_SONGS = "vw_all_songs"
 VW_PLAYABLE_SONGS = "vw_playable_songs"
 VW_UNPLAYABLE_SONGS = "vw_unplayable_songs"
 VW_RECENTLY_UPDATED_SONGS = "vw_recently_updated_songs"
-SONG_ORDER_BY = "artist_en NULLS LAST, song_name_en NULLS LAST"
 
 
-def _build_base_where(
+def _get_view(conn: Connection, view_name: str) -> sa.Table:
+    schema = get_settings().schema
+    return sa.Table(
+        view_name,
+        sa.MetaData(),
+        schema=schema,
+        autoload_with=conn,
+    )
+
+
+def _build_base_filters(
     *,
+    table: sa.Table,
     q: str | None,
     genre: str | None = None,
-    in_master: bool | None,
-    audio_available: bool | None,
-    drum_sheet_available: bool | None,
-    source_available: bool | None,
-) -> tuple[str, dict[str, object]]:
-    conditions: list[str] = []
-    params: dict[str, object] = {}
+    in_master: bool | None = None,
+    audio_available: bool | None = None,
+    drum_sheet_available: bool | None = None,
+    source_available: bool | None = None,
+) -> list[ColumnElement[bool]]:
+    filters: list[ColumnElement[bool]] = []
 
     if q:
-        conditions.append("(artist_en ILIKE :q OR song_name_en ILIKE :q)")
-        params["q"] = f"%{q}%"
+        pattern = f"%{q}%"
+        filters.append(
+            sa.or_(
+                table.c.artist_en.ilike(pattern),
+                table.c.song_name_en.ilike(pattern),
+            )
+        )
 
     if genre is not None:
-        conditions.append("genre ILIKE :genre")
-        params["genre"] = f"%{genre}%"
+        filters.append(table.c.genre.ilike(f"%{genre}%"))
 
     if in_master is not None:
-        conditions.append("in_master = :in_master")
-        params["in_master"] = in_master
+        filters.append(table.c.in_master.is_(in_master))
 
     if audio_available is not None:
-        conditions.append("audio_available = :audio_available")
-        params["audio_available"] = audio_available
+        filters.append(table.c.audio_available.is_(audio_available))
 
     if drum_sheet_available is not None:
-        conditions.append("drum_sheet_available = :drum_sheet_available")
-        params["drum_sheet_available"] = drum_sheet_available
+        filters.append(table.c.drum_sheet_available.is_(drum_sheet_available))
 
     if source_available is not None:
-        conditions.append("source_available = :source_available")
-        params["source_available"] = source_available
+        filters.append(table.c.source_available.is_(source_available))
 
-    if not conditions:
-        return "", params
+    return filters
 
-    return "WHERE " + " AND ".join(conditions), params
+
+def _default_song_order_by(table: sa.Table) -> tuple[ColumnElement[Any], ...]:
+    return (
+        table.c.artist_en.asc().nulls_last(),
+        table.c.song_name_en.asc().nulls_last(),
+    )
 
 
 def _fetch_rows(
     conn: Connection,
-    view_name: str,
+    table: sa.Table,
     *,
-    where_clause: str,
-    where_params: dict[str, object],
+    filters: Sequence[ColumnElement[bool]],
     limit: int,
     offset: int,
-    order_by: str,
+    order_by: Sequence[ColumnElement[Any]],
 ) -> Sequence[RowMapping]:
-    schema = get_settings().schema
-    stmt = sa.text(f"""
-        SELECT *
-        FROM {schema}.{view_name}
-        {where_clause}
-        ORDER BY {order_by}
-        LIMIT :limit
-        OFFSET :offset
-        """)
-    params = {
-        **where_params,
-        "limit": limit,
-        "offset": offset,
-    }
-    return conn.execute(stmt, params).mappings().all()
+    stmt = sa.select(table)
+    if filters:
+        stmt = stmt.where(sa.and_(*filters))
+    stmt = stmt.order_by(*order_by).limit(limit).offset(offset)
+    return conn.execute(stmt).mappings().all()
 
 
 def _fetch_count(
     conn: Connection,
-    view_name: str,
+    table: sa.Table,
     *,
-    where_clause: str,
-    where_params: dict[str, object],
+    filters: Sequence[ColumnElement[bool]],
 ) -> int:
-    schema = get_settings().schema
-    stmt = sa.text(f"""
-        SELECT COUNT(*) AS total
-        FROM {schema}.{view_name}
-        {where_clause}
-        """)
-    row = conn.execute(stmt, where_params).mappings().one()
-    return int(row["total"])
+    stmt = sa.select(sa.func.count()).select_from(table)
+    if filters:
+        stmt = stmt.where(sa.and_(*filters))
+    total = conn.execute(stmt).scalar_one()
+    return int(total)
 
 
 @router.get(
@@ -138,7 +138,9 @@ def get_all_songs(
     offset: int = Query(default=0, ge=0),
     conn: Connection = Depends(get_db_connection),
 ) -> list[SongRow]:
-    where_clause, where_params = _build_base_where(
+    table = _get_view(conn, VW_ALL_SONGS)
+    filters = _build_base_filters(
+        table=table,
         q=q,
         in_master=in_master,
         audio_available=audio_available,
@@ -147,14 +149,55 @@ def get_all_songs(
     )
     rows = _fetch_rows(
         conn,
-        VW_ALL_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
+        table,
+        filters=filters,
         limit=limit,
         offset=offset,
-        order_by=SONG_ORDER_BY,
+        order_by=_default_song_order_by(table),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/count",
+    response_model=SongCount,
+    summary="Count all songs",
+    description="Get total count from vw_all_songs for pagination.",
+)
+def get_all_songs_count(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    in_master: bool | None = Query(
+        default=None,
+        description="Filter by master presence flag.",
+    ),
+    audio_available: bool | None = Query(
+        default=None,
+        description="Filter by audio availability.",
+    ),
+    drum_sheet_available: bool | None = Query(
+        default=None,
+        description="Filter by drum sheet availability.",
+    ),
+    source_available: bool | None = Query(
+        default=None,
+        description="Filter by source availability.",
+    ),
+    conn: Connection = Depends(get_db_connection),
+) -> SongCount:
+    table = _get_view(conn, VW_ALL_SONGS)
+    filters = _build_base_filters(
+        table=table,
+        q=q,
+        in_master=in_master,
+        audio_available=audio_available,
+        drum_sheet_available=drum_sheet_available,
+        source_available=source_available,
+    )
+    total = _fetch_count(conn, table, filters=filters)
+    return SongCount(total=total)
 
 
 @router.get(
@@ -176,22 +219,19 @@ def get_playable_songs(
     offset: int = Query(default=0, ge=0),
     conn: Connection = Depends(get_db_connection),
 ) -> list[SongRow]:
-    where_clause, where_params = _build_base_where(
+    table = _get_view(conn, VW_PLAYABLE_SONGS)
+    filters = _build_base_filters(
+        table=table,
         q=q,
         genre=genre,
-        in_master=None,
-        audio_available=None,
-        drum_sheet_available=None,
-        source_available=None,
     )
     rows = _fetch_rows(
         conn,
-        VW_PLAYABLE_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
+        table,
+        filters=filters,
         limit=limit,
         offset=offset,
-        order_by=SONG_ORDER_BY,
+        order_by=_default_song_order_by(table),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
 
@@ -213,20 +253,13 @@ def get_playable_songs_count(
     ),
     conn: Connection = Depends(get_db_connection),
 ) -> SongCount:
-    where_clause, where_params = _build_base_where(
+    table = _get_view(conn, VW_PLAYABLE_SONGS)
+    filters = _build_base_filters(
+        table=table,
         q=q,
         genre=genre,
-        in_master=None,
-        audio_available=None,
-        drum_sheet_available=None,
-        source_available=None,
     )
-    total = _fetch_count(
-        conn,
-        VW_PLAYABLE_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
-    )
+    total = _fetch_count(conn, table, filters=filters)
     return SongCount(total=total)
 
 
@@ -253,43 +286,69 @@ def get_unplayable_songs(
     offset: int = Query(default=0, ge=0),
     conn: Connection = Depends(get_db_connection),
 ) -> list[SongRow]:
-    where_clause, where_params = _build_base_where(
+    table = _get_view(conn, VW_UNPLAYABLE_SONGS)
+    filters = _build_base_filters(
+        table=table,
         q=q,
-        in_master=None,
-        audio_available=None,
-        drum_sheet_available=None,
-        source_available=None,
     )
 
-    extra_conditions: list[str] = []
     if missing_audio is True:
-        extra_conditions.append("audio_available IS NOT TRUE")
+        filters.append(table.c.audio_available.is_not(True))
     elif missing_audio is False:
-        extra_conditions.append("audio_available IS TRUE")
+        filters.append(table.c.audio_available.is_(True))
 
     if missing_drum_sheet is True:
-        extra_conditions.append("drum_sheet_available IS NOT TRUE")
+        filters.append(table.c.drum_sheet_available.is_not(True))
     elif missing_drum_sheet is False:
-        extra_conditions.append("drum_sheet_available IS TRUE")
-
-    if extra_conditions:
-        if where_clause:
-            where_clause = (
-                where_clause + " AND " + " AND ".join(extra_conditions)
-            )
-        else:
-            where_clause = "WHERE " + " AND ".join(extra_conditions)
+        filters.append(table.c.drum_sheet_available.is_(True))
 
     rows = _fetch_rows(
         conn,
-        VW_UNPLAYABLE_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
+        table,
+        filters=filters,
         limit=limit,
         offset=offset,
-        order_by=SONG_ORDER_BY,
+        order_by=_default_song_order_by(table),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/unplayable/count",
+    response_model=SongCount,
+    summary="Count unplayable songs",
+    description="Get total count from vw_unplayable_songs for pagination.",
+)
+def get_unplayable_songs_count(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    missing_audio: bool | None = Query(
+        default=None,
+        description="Filter rows that are missing audio.",
+    ),
+    missing_drum_sheet: bool | None = Query(
+        default=None,
+        description="Filter rows that are missing drum sheet.",
+    ),
+    conn: Connection = Depends(get_db_connection),
+) -> SongCount:
+    table = _get_view(conn, VW_UNPLAYABLE_SONGS)
+    filters = _build_base_filters(table=table, q=q)
+
+    if missing_audio is True:
+        filters.append(table.c.audio_available.is_not(True))
+    elif missing_audio is False:
+        filters.append(table.c.audio_available.is_(True))
+
+    if missing_drum_sheet is True:
+        filters.append(table.c.drum_sheet_available.is_not(True))
+    elif missing_drum_sheet is False:
+        filters.append(table.c.drum_sheet_available.is_(True))
+
+    total = _fetch_count(conn, table, filters=filters)
+    return SongCount(total=total)
 
 
 @router.get(
@@ -307,23 +366,38 @@ def get_recently_updated_songs(
     offset: int = Query(default=0, ge=0),
     conn: Connection = Depends(get_db_connection),
 ) -> list[SongRow]:
-    where_clause, where_params = _build_base_where(
-        q=q,
-        in_master=None,
-        audio_available=None,
-        drum_sheet_available=None,
-        source_available=None,
-    )
+    table = _get_view(conn, VW_RECENTLY_UPDATED_SONGS)
+    filters = _build_base_filters(table=table, q=q)
     rows = _fetch_rows(
         conn,
-        VW_RECENTLY_UPDATED_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
+        table,
+        filters=filters,
         limit=limit,
         offset=offset,
-        order_by="updated_at DESC",
+        order_by=(table.c.updated_at.desc(),),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/recent/count",
+    response_model=SongCount,
+    summary="Count recently updated songs",
+    description=(
+        "Get total count from vw_recently_updated_songs for pagination."
+    ),
+)
+def get_recently_updated_songs_count(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    conn: Connection = Depends(get_db_connection),
+) -> SongCount:
+    table = _get_view(conn, VW_RECENTLY_UPDATED_SONGS)
+    filters = _build_base_filters(table=table, q=q)
+    total = _fetch_count(conn, table, filters=filters)
+    return SongCount(total=total)
 
 
 @router.get(
@@ -344,31 +418,23 @@ def get_incomplete_songs(
     offset: int = Query(default=0, ge=0),
     conn: Connection = Depends(get_db_connection),
 ) -> list[SongRow]:
-    base_where, where_params = _build_base_where(
-        q=q,
-        in_master=None,
-        audio_available=None,
-        drum_sheet_available=None,
-        source_available=None,
+    table = _get_view(conn, VW_ALL_SONGS)
+    filters = _build_base_filters(table=table, q=q)
+    filters.extend(
+        [
+            table.c.in_master.is_(True),
+            table.c.audio_available.is_not(True),
+            table.c.drum_sheet_available.is_not(True),
+            table.c.source_available.is_not(True),
+        ]
     )
-    no_files = (
-        "in_master IS TRUE"
-        " AND audio_available IS NOT TRUE"
-        " AND drum_sheet_available IS NOT TRUE"
-        " AND source_available IS NOT TRUE"
-    )
-    if base_where:
-        where_clause = base_where + " AND " + no_files
-    else:
-        where_clause = "WHERE " + no_files
     rows = _fetch_rows(
         conn,
-        VW_ALL_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
+        table,
+        filters=filters,
         limit=limit,
         offset=offset,
-        order_by=SONG_ORDER_BY,
+        order_by=_default_song_order_by(table),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
 
@@ -386,30 +452,17 @@ def get_incomplete_songs_count(
     ),
     conn: Connection = Depends(get_db_connection),
 ) -> SongCount:
-    base_where, where_params = _build_base_where(
-        q=q,
-        in_master=None,
-        audio_available=None,
-        drum_sheet_available=None,
-        source_available=None,
+    table = _get_view(conn, VW_ALL_SONGS)
+    filters = _build_base_filters(table=table, q=q)
+    filters.extend(
+        [
+            table.c.in_master.is_(True),
+            table.c.audio_available.is_not(True),
+            table.c.drum_sheet_available.is_not(True),
+            table.c.source_available.is_not(True),
+        ]
     )
-    no_files = (
-        "in_master IS TRUE"
-        " AND audio_available IS NOT TRUE"
-        " AND drum_sheet_available IS NOT TRUE"
-        " AND source_available IS NOT TRUE"
-    )
-    if base_where:
-        where_clause = base_where + " AND " + no_files
-    else:
-        where_clause = "WHERE " + no_files
-
-    total = _fetch_count(
-        conn,
-        VW_ALL_SONGS,
-        where_clause=where_clause,
-        where_params=where_params,
-    )
+    total = _fetch_count(conn, table, filters=filters)
     return SongCount(total=total)
 
 
@@ -423,11 +476,9 @@ def get_song(
     song_id: UUID,
     conn: Connection = Depends(get_db_connection),
 ) -> SongRow:
-    schema = get_settings().schema
-    stmt = sa.text(
-        f"SELECT * FROM {schema}.{VW_ALL_SONGS} WHERE song_id = :song_id"
-    )
-    row = conn.execute(stmt, {"song_id": str(song_id)}).mappings().first()
+    table = _get_view(conn, VW_ALL_SONGS)
+    stmt = sa.select(table).where(table.c.song_id == song_id)
+    row = conn.execute(stmt).mappings().first()
     if row is None:
         raise HTTPException(status_code=404, detail="Song not found.")
     return SongRow.model_validate(dict(row))

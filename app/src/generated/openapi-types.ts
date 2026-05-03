@@ -41,6 +41,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/songs/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count all songs
+         * @description Get total count from vw_all_songs for pagination.
+         */
+        get: operations["get_all_songs_count_songs_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/songs/playable": {
         parameters: {
             query?: never;
@@ -101,6 +121,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/songs/unplayable/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count unplayable songs
+         * @description Get total count from vw_unplayable_songs for pagination.
+         */
+        get: operations["get_unplayable_songs_count_songs_unplayable_count_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/songs/recent": {
         parameters: {
             query?: never;
@@ -113,6 +153,26 @@ export interface paths {
          * @description Read songs from vw_recently_updated_songs.
          */
         get: operations["get_recently_updated_songs_songs_recent_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/songs/recent/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Count recently updated songs
+         * @description Get total count from vw_recently_updated_songs for pagination.
+         */
+        get: operations["get_recently_updated_songs_count_songs_recent_count_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -430,6 +490,46 @@ export interface operations {
             };
         };
     };
+    get_all_songs_count_songs_count_get: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive search on artist_en or song_name_en. */
+                q?: string | null;
+                /** @description Filter by master presence flag. */
+                in_master?: boolean | null;
+                /** @description Filter by audio availability. */
+                audio_available?: boolean | null;
+                /** @description Filter by drum sheet availability. */
+                drum_sheet_available?: boolean | null;
+                /** @description Filter by source availability. */
+                source_available?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SongCount"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_playable_songs_songs_playable_get: {
         parameters: {
             query?: {
@@ -538,6 +638,42 @@ export interface operations {
             };
         };
     };
+    get_unplayable_songs_count_songs_unplayable_count_get: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive search on artist_en or song_name_en. */
+                q?: string | null;
+                /** @description Filter rows that are missing audio. */
+                missing_audio?: boolean | null;
+                /** @description Filter rows that are missing drum sheet. */
+                missing_drum_sheet?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SongCount"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_recently_updated_songs_songs_recent_get: {
         parameters: {
             query?: {
@@ -559,6 +695,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SongRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_recently_updated_songs_count_songs_recent_count_get: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive search on artist_en or song_name_en. */
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SongCount"];
                 };
             };
             /** @description Validation Error */
