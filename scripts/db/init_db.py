@@ -10,11 +10,10 @@ from sqlalchemy import (
 from sqlalchemy.schema import CreateSchema
 import sqlalchemy as sa
 
-from src.db.postgres.song_master import (
+from src.db.postgres import (
     build_song_master_table,
-)
-from src.db.postgres.song_audio import (
     build_song_audio_table,
+    build_song_drum_sheet_table,
 )
 
 if __name__ == "__main__":
@@ -43,29 +42,7 @@ if __name__ == "__main__":
 
     song_audio_table = build_song_audio_table(metadata, schema)
 
-    song_drum_sheet_table = Table(
-        "song_drum_sheet",
-        metadata,
-        Column(
-            "song_id",
-            sa.UUID,
-            sa.ForeignKey(f"{schema}.song_master.song_id"),
-            nullable=False,
-            primary_key=True,
-        ),
-        Column("file_path_hash", String(64), nullable=False),
-        Column("file_path", String(1024), nullable=False),
-        Column("file_name", String(255), nullable=False),
-        Column("stem", String(255), nullable=False),
-        Column("extension", String(16), nullable=False),
-        Column("file_type", String(32), nullable=False),
-        Column("artist_en", String(255), nullable=False),
-        Column("song_name_en", String(255), nullable=False),
-        Column("last_modified_ts", DateTime, nullable=False),
-        Column("created_at", DateTime, server_default=sa.func.now()),
-        Column("updated_at", DateTime, server_default=sa.func.now()),
-        schema=schema,
-    )
+    song_drum_sheet_table = build_song_drum_sheet_table(metadata, schema)
 
     song_source_table = Table(
         "song_source",

@@ -2,7 +2,11 @@ from dotenv import load_dotenv
 import os
 from src.db.song_master.manager import SongMasterManager
 from src.db.song_master.constants import SONG_MASTER_LIST_UUID
-from src.db.postgres import SongMasterTable, SongAudioTable
+from src.db.postgres import (
+    SongMasterTable,
+    SongAudioTable,
+    SongDrumSheetTable,
+)
 
 if __name__ == "__main__":
 
@@ -40,3 +44,10 @@ if __name__ == "__main__":
         table_name="song_audio",
     )
     sat.merge(df_song_audio)
+
+    sdst = SongDrumSheetTable(
+        dsn=dsn,
+        schema=schema,
+        table_name="song_drum_sheet",
+    )
+    sdst.merge(df_song_drum_sheet)
