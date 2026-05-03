@@ -1,14 +1,6 @@
 from dotenv import load_dotenv
 import os
-from src.db.song_master.manager import SongMasterManager
-from src.db.song_master.constants import SONG_MASTER_LIST_UUID
-from src.db.postgres import (
-    SongMasterTable,
-    SongAudioTable,
-    SongDrumSheetTable,
-    SongSourceTable,
-    AppViewManager,
-)
+from src.db.sync import run_sync_once
 
 if __name__ == "__main__":
     load_dotenv()
@@ -23,45 +15,16 @@ if __name__ == "__main__":
     if not schema:
         raise ValueError("POSTGRES_DB_SCHEMA is not set")
 
-    smm = SongMasterManager(
-        master_file=os.getenv("MASTER_FILE"),
-        song_data_folder=os.getenv("SONG_DATA_FOLDER"),
-        uuid_seed=SONG_MASTER_LIST_UUID,
-    )
-    df_song_master, df_song_audio, df_song_drum_sheet, df_song_source = (
-        smm.get_all_songs_snapshot()
-    )
+    master_file = os.getenv("MASTER_FILE")
+    song_data_folder = os.getenv("SONG_DATA_FOLDER")
+    if not master_file:
+        raise ValueError("MASTER_FILE is not set")
+    if not song_data_folder:
+        raise ValueError("SONG_DATA_FOLDER is not set")
 
-    smt = SongMasterTable(
+    run_sync_once(
         dsn=dsn,
         schema=schema,
-        table_name="song_master",
+        master_file=master_file,
+        song_data_folder=song_data_folder,
     )
-    smt.merge(df_song_master)
-
-    sat = SongAudioTable(
-        dsn=dsn,
-        schema=schema,
-        table_name="song_audio",
-    )
-    sat.merge(df_song_audio)
-
-    sdst = SongDrumSheetTable(
-        dsn=dsn,
-        schema=schema,
-        table_name="song_drum_sheet",
-    )
-    sdst.merge(df_song_drum_sheet)
-
-    sst = SongSourceTable(
-        dsn=dsn,
-        schema=schema,
-        table_name="song_source",
-    )
-    sst.merge(df_song_source)
-
-    avm = AppViewManager(
-        dsn=dsn,
-        schema=schema,
-    )
-    avm.create_views()

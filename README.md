@@ -29,10 +29,18 @@ Environment variables:
 
 ### Available Endpoints
 
-- `GET /health`
+Songs endpoints:
+
 - `GET /songs`
 - `GET /songs/playable`
 - `GET /songs/unplayable`
 - `GET /songs/recent`
+
+Admin sync endpoints:
+
+- `POST /admin/sync`
+- `GET /admin/sync/current`
+- `GET /admin/sync/{job_id}`
+- `GET /health`
 
 Interactive docs are available at `/docs` when the API is running.
