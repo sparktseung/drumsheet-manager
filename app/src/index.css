@@ -259,12 +259,67 @@ tbody tr:hover td {
 }
 
 .viewer-bar {
-  height: 56px;
+  min-height: 72px;
   flex-shrink: 0;
   background: #111;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+.viewer-bar-side,
+.viewer-bar-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.viewer-bar-side-left {
+  justify-content: flex-start;
+}
+
+.viewer-bar-side-right {
+  justify-content: flex-end;
+}
+
+.viewer-bar-center {
   justify-content: center;
+  gap: 0.6rem;
+}
+
+.viewer-delay-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #f3efe8;
+  font-size: 0.95rem;
+}
+
+.viewer-delay-control input {
+  width: 180px;
+}
+
+.viewer-progress-control {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #f3efe8;
+  font-size: 0.9rem;
+  min-width: min(36rem, 100%);
+}
+
+.viewer-progress-control input {
+  width: min(24rem, 40vw);
+}
+
+.viewer-seek-btn {
+  min-width: 4.5rem;
+}
+
+.viewer-reset-btn {
+  min-width: 7rem;
 }
 
 .viewer-play-btn {
@@ -285,6 +340,38 @@ tbody tr:hover td {
 
 .row-action-button {
   min-width: 4.75rem;
+}
+
+@media (max-width: 760px) {
+  .viewer-bar {
+    flex-direction: column;
+  }
+
+  .viewer-bar-side,
+  .viewer-bar-center {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .viewer-delay-control {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .viewer-progress-control {
+    width: 100%;
+    justify-content: center;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .viewer-delay-control input {
+    width: min(220px, 55vw);
+  }
+
+  .viewer-progress-control input {
+    width: min(260px, 60vw);
+  }
 }
 
 @keyframes reveal-up {
