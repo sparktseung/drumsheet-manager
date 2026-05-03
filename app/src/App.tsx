@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -21,18 +20,6 @@ function formatSync(job: SyncJob | null): string {
     return "No sync currently running";
   }
   return `Sync ${job.status} (job ${job.job_id.slice(0, 8)})`;
-}
-
-function SongCell({ song, value }: { song: SongRow; value: string | null }) {
-  if (!value) {
-    return <span className="muted">-</span>;
-  }
-
-  return (
-    <Link className="plain-link" to={`/songs/${song.song_id}`}>
-      {value}
-    </Link>
-  );
 }
 
 function App() {
@@ -281,12 +268,13 @@ function App() {
                 <th>genre</th>
                 <th>artist_local</th>
                 <th>song_name_local</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {!loading && rows.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="muted center">
+                  <td colSpan={4} className="muted center">
                     No songs found.
                   </td>
                 </tr>
@@ -295,13 +283,22 @@ function App() {
               {rows.map((song) => (
                 <tr key={song.song_id}>
                   <td>
-                    <SongCell song={song} value={song.genre} />
+                    {song.genre ?? <span className="muted">-</span>}
                   </td>
                   <td>
-                    <SongCell song={song} value={song.artist_local} />
+                    {song.artist_local ?? <span className="muted">-</span>}
                   </td>
                   <td>
-                    <SongCell song={song} value={song.song_name_local} />
+                    {song.song_name_local ?? <span className="muted">-</span>}
+                  </td>
+                  <td className="col-play">
+                    <button
+                      className="button row-action-button"
+                      type="button"
+                      onClick={() => window.open(`/songs/${song.song_id}`, "_blank")}
+                    >
+                      Play
+                    </button>
                   </td>
                 </tr>
               ))}

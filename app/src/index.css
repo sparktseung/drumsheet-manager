@@ -171,6 +171,10 @@ th {
   font-size: 0.8rem;
 }
 
+tbody tr:hover td {
+  background: #ead8bc;
+}
+
 .plain-link {
   color: #0f5f83;
   font-weight: 500;
@@ -227,35 +231,60 @@ th {
   font-weight: 700;
 }
 
-.detail-header {
+/* ── Song viewer (full-screen PDF + audio bar) ── */
+
+.viewer-shell {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #2b2b2b;
+}
+
+.viewer-scroll-area {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+.viewer-pages-row {
+  display: flex !important;
+  flex-direction: row;
+  gap: 6px;
+  padding: 6px;
+  align-items: flex-start;
+  min-width: max-content;
+}
+
+.viewer-bar {
+  height: 56px;
+  flex-shrink: 0;
+  background: #111;
+  display: flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
 }
 
-.detail-card {
-  margin-top: 1rem;
-  padding: 1rem;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: #fff;
+.viewer-play-btn {
+  min-width: 7rem;
 }
 
-.detail-note {
-  margin: 0;
+.viewer-play-btn.is-playing {
+  background: var(--danger);
 }
 
-.detail-id {
-  margin-top: 0.7rem;
-  font-weight: 700;
+/* ── Play button in the song table ── */
+
+.col-play {
+  width: 1px;
+  white-space: nowrap;
+  text-align: right;
 }
 
-.detail-actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 0.7rem;
-  flex-wrap: wrap;
+.row-action-button {
+  min-width: 4.75rem;
 }
 
 @keyframes reveal-up {
