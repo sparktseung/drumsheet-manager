@@ -20,7 +20,11 @@ function formatSync(job: SyncJob | null): string {
     if (!job) {
         return "No sync currently running";
     }
-    return `Sync ${job.status} (job ${job.job_id.slice(0, 8)})`;
+    const base = `Sync ${job.status} (job ${job.job_id.slice(0, 8)})`;
+    if (job.status === "failed" && job.error) {
+        return `${base} — ${job.error}`;
+    }
+    return base;
 }
 
 export function useSyncStatus({

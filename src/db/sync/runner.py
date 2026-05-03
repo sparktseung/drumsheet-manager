@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlalchemy as sa
+import polars as pl
 from sqlalchemy.engine import Engine
 from sqlalchemy.schema import CreateSchema
 
@@ -17,6 +18,23 @@ from src.db.postgres import (
 )
 from src.db.song_master.constants import SONG_MASTER_LIST_UUID
 from src.db.song_master.manager import SongMasterManager
+
+
+def _filter_child_rows_by_master_ids(
+    *,
+    df_child: pl.DataFrame,
+    master_song_ids: set[str],
+) -> pl.DataFrame:
+    """Drop child rows that do not map to any master song_id.
+
+    Child tables use song_id as a foreign key to song_master. This filter
+    prevents a bad file-name parse or missing master row from crashing the
+    entire sync job.
+    """
+    if df_child.is_empty() or "song_id" not in df_child.columns:
+        return df_child
+
+    return df_child.filter(pl.col("song_id").is_in(list(master_song_ids)))
 
 
 def create_tables_if_not_exist(
@@ -62,6 +80,25 @@ def run_sync_once(
         )
         df_song_master, df_song_audio, df_song_drum_sheet, df_song_source = (
             smm.get_all_songs_snapshot()
+        )
+
+        # Ensure dependent rows only reference IDs present in the master list.
+        # This avoids FK violations when local filenames don't match master.
+        master_song_ids = {
+            str(song_id)
+            for song_id in df_song_master.get_column("song_id").to_list()
+        }
+        df_song_audio = _filter_child_rows_by_master_ids(
+            df_child=df_song_audio,
+            master_song_ids=master_song_ids,
+        )
+        df_song_drum_sheet = _filter_child_rows_by_master_ids(
+            df_child=df_song_drum_sheet,
+            master_song_ids=master_song_ids,
+        )
+        df_song_source = _filter_child_rows_by_master_ids(
+            df_child=df_song_source,
+            master_song_ids=master_song_ids,
         )
 
         smt = SongMasterTable(
