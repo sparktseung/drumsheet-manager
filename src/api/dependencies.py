@@ -5,14 +5,22 @@ from functools import lru_cache
 
 import sqlalchemy as sa
 from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.schema import CreateSchema
 
 from .config import get_settings
+
+
+def _ensure_schema_exists(engine: Engine, schema: str) -> None:
+    with engine.begin() as conn:
+        conn.execute(CreateSchema(schema, if_not_exists=True))
 
 
 @lru_cache(maxsize=1)
 def get_engine() -> Engine:
     settings = get_settings()
-    return sa.create_engine(settings.dsn, future=True)
+    engine = sa.create_engine(settings.dsn, future=True)
+    _ensure_schema_exists(engine, settings.schema)
+    return engine
 
 
 def close_engine() -> None:
