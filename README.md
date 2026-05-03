@@ -8,6 +8,7 @@
     - [Set Up A PostgreSQL Database](#set-up-a-postgresql-database)
     - [Set Up Master Spreadsheet + Raw Data Folder](#set-up-master-spreadsheet--raw-data-folder)
     - [Set up Environment Variables](#set-up-environment-variables)
+  - [Project Structure](#project-structure)
   - [Install Dependencies](#install-dependencies)
   - [Run The App](#run-the-app)
     - [Recommended (single command)](#recommended-single-command)
@@ -18,9 +19,12 @@
 
 ## Overview
 
-A local web app to manage drum sheet music, built with FastAPI and React. The app reads from a master spreadsheet and a folder of raw data (Audio, PDFs, MuseScore files, etc.) to populate a database of songs. The frontend allows users to browse and filter songs, view details, and play the audio files along side the drumsheet.
+A local web app to manage drum sheets and music files, built with FastAPI and React. The app reads from a master spreadsheet and a folder of raw data (Audio, PDFs, MuseScore files, etc.) to populate a database of songs. The frontend allows users to browse and filter songs, view details, and play the audio files alongside the drumsheet.
 
+**Home view**: song list, search, pagination, and sync status.
 ![Homepage](demo/homepage.png)
+
+**Song detail view**: playback controls and linked drum sheet.
 ![Song Detail Page](demo/songpage.png)
 
 
@@ -78,6 +82,10 @@ Notes:
     ```
     `(additional qualifier)` will be ignored and are only for your file organization purposes.
 
+  - Supported file types:
+    - Audio: `.mp3`, `.wav`
+    - Drumsheets: `.pdf`
+    - MuseScore files (for future use): `.mscz`
 
 ### Set up Environment Variables
 
@@ -112,13 +120,32 @@ What to change for your machine:
 - `MASTER_FILE`
 - `SONG_DATA_FOLDER`
 
+## Project Structure
+
+```text
+drumsheet-manager/
+├── src/                     # FastAPI app, DB layers, sync logic
+│   ├── api/                 # API routes, schemas, services, app config
+│   ├── db/                  # Postgres models/tables/views + sync runner
+│   └── files/               # File utilities for audio/drum sheets
+├── app/                     # React + TypeScript frontend (Vite)
+│   └── src/                 # Pages, components, hooks, API client
+├── scripts/                 # Entry scripts for API and DB tasks
+│   ├── api/                 # API startup script
+│   └── db/                  # DB init and sync scripts
+├── demo/                    # README screenshots and demo assets
+├── data/                    # Local data files (if used)
+├── start_app.sh             # One-command local startup (frontend + backend)
+├── pyproject.toml           # Python project/dependency config
+└── README.md                # Project documentation
+```
+
 ## Install Dependencies
 
 Backend (from repo root):
 
 ```bash
 uv sync
-source .venv/bin/activate
 ```
 
 Frontend:
