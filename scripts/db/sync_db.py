@@ -7,6 +7,7 @@ from src.db.postgres import (
     SongAudioTable,
     SongDrumSheetTable,
     SongSourceTable,
+    AppViewManager,
 )
 
 if __name__ == "__main__":
@@ -59,3 +60,9 @@ if __name__ == "__main__":
         table_name="song_source",
     )
     sst.merge(df_song_source)
+
+    avm = AppViewManager(
+        dsn=dsn,
+        schema=schema,
+    )
+    avm.create_views()

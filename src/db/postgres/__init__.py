@@ -5,6 +5,7 @@ from .song_drum_sheet import (
 )
 from .song_master import SongMasterTable, build_song_master_table
 from .song_source import SongSourceTable, build_song_source_table
+from .app_views import AppViewManager
 
 __all__ = [
     "SongMasterTable",
@@ -15,4 +16,5 @@ __all__ = [
     "build_song_audio_table",
     "build_song_drum_sheet_table",
     "build_song_source_table",
+    "AppViewManager",
 ]
