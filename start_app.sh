@@ -19,14 +19,8 @@ is_port_in_use() {
   return 1
 }
 
-if [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
-  PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
-elif command -v python3 >/dev/null 2>&1; then
-  PYTHON_BIN="python3"
-elif command -v python >/dev/null 2>&1; then
-  PYTHON_BIN="python"
-else
-  echo "Error: Python was not found." >&2
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Error: uv was not found. Install it from https://docs.astral.sh/uv/" >&2
   exit 1
 fi
 
@@ -64,7 +58,7 @@ trap cleanup EXIT INT TERM
 echo "Starting backend on http://$API_HOST:$API_PORT ..."
 (
   cd "$ROOT_DIR"
-  "$PYTHON_BIN" scripts/api/run_api.py
+  uv run python scripts/api/run_api.py
 ) &
 BACKEND_PID=$!
 
