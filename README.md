@@ -26,6 +26,7 @@ Environment variables:
 - `API_HOST` (optional, default `127.0.0.1`)
 - `API_PORT` (optional, default `8000`)
 - `API_RELOAD` (optional, `1` or `0`, default `1`)
+- `API_CORS_ORIGINS` (optional, comma-separated list, default `http://127.0.0.1:5173,http://localhost:5173`)
 
 ### Available Endpoints
 
