@@ -10,7 +10,7 @@ from sqlalchemy.engine import Connection, RowMapping
 
 from ..config import get_settings
 from ..dependencies import get_db_connection
-from ..schemas import SongRow
+from ..schemas import SongCount, SongRow
 
 router = APIRouter(prefix="/songs", tags=["songs"])
 
@@ -88,6 +88,23 @@ def _fetch_rows(
         "offset": offset,
     }
     return conn.execute(stmt, params).mappings().all()
+
+
+def _fetch_count(
+    conn: Connection,
+    view_name: str,
+    *,
+    where_clause: str,
+    where_params: dict[str, object],
+) -> int:
+    schema = get_settings().schema
+    stmt = sa.text(f"""
+        SELECT COUNT(*) AS total
+        FROM {schema}.{view_name}
+        {where_clause}
+        """)
+    row = conn.execute(stmt, where_params).mappings().one()
+    return int(row["total"])
 
 
 @router.get(
@@ -177,6 +194,40 @@ def get_playable_songs(
         order_by=SONG_ORDER_BY,
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/playable/count",
+    response_model=SongCount,
+    summary="Count playable songs",
+    description="Get total count from vw_playable_songs for pagination.",
+)
+def get_playable_songs_count(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    genre: str | None = Query(
+        default=None,
+        description="Case-insensitive substring filter on genre.",
+    ),
+    conn: Connection = Depends(get_db_connection),
+) -> SongCount:
+    where_clause, where_params = _build_base_where(
+        q=q,
+        genre=genre,
+        in_master=None,
+        audio_available=None,
+        drum_sheet_available=None,
+        source_available=None,
+    )
+    total = _fetch_count(
+        conn,
+        VW_PLAYABLE_SONGS,
+        where_clause=where_clause,
+        where_params=where_params,
+    )
+    return SongCount(total=total)
 
 
 @router.get(
@@ -320,6 +371,46 @@ def get_incomplete_songs(
         order_by=SONG_ORDER_BY,
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/incomplete/count",
+    response_model=SongCount,
+    summary="Count incomplete songs",
+    description="Get total count for incomplete songs pagination.",
+)
+def get_incomplete_songs_count(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    conn: Connection = Depends(get_db_connection),
+) -> SongCount:
+    base_where, where_params = _build_base_where(
+        q=q,
+        in_master=None,
+        audio_available=None,
+        drum_sheet_available=None,
+        source_available=None,
+    )
+    no_files = (
+        "in_master IS TRUE"
+        " AND audio_available IS NOT TRUE"
+        " AND drum_sheet_available IS NOT TRUE"
+        " AND source_available IS NOT TRUE"
+    )
+    if base_where:
+        where_clause = base_where + " AND " + no_files
+    else:
+        where_clause = "WHERE " + no_files
+
+    total = _fetch_count(
+        conn,
+        VW_ALL_SONGS,
+        where_clause=where_clause,
+        where_params=where_params,
+    )
+    return SongCount(total=total)
 
 
 @router.get(

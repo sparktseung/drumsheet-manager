@@ -21,3 +21,7 @@ class SongRow(BaseModel):
     drum_sheet_file_path: str | None = None
     source_available: bool
     source_file_path: str | None = None
+
+
+class SongCount(BaseModel):
+    total: int
