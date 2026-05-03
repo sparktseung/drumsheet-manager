@@ -1,9 +1,9 @@
-from dotenv import load_dotenv
 import os
 from src.db.sync import run_sync_once
+from src.env import load_root_dotenv
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_root_dotenv()
     dsn = os.getenv("POSTGRES_DB_DSN")
     schema = os.getenv("POSTGRES_DB_SCHEMA")
 

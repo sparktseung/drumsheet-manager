@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 import os
 
-from dotenv import load_dotenv
+from ..env import load_root_dotenv
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ def _normalize_dsn(dsn: str) -> str:
 
 @lru_cache(maxsize=1)
 def get_settings() -> ApiSettings:
-    load_dotenv()
+    load_root_dotenv()
 
     dsn = os.getenv("POSTGRES_DB_DSN")
     schema = os.getenv("POSTGRES_DB_SCHEMA")

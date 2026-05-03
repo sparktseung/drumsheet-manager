@@ -3,10 +3,12 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import process from "node:process";
 
 const execFileAsync = promisify(execFile);
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const backendRootDir = resolve(rootDir, "..");
+process.loadEnvFile(resolve(backendRootDir, ".env"));
 const venvPython = resolve(backendRootDir, ".venv/bin/python");
 const generatedDir = resolve(rootDir, "src/generated");
 const schemaPath = resolve(generatedDir, "openapi.json");

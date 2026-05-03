@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 import os
 from sqlalchemy import (
     MetaData,
@@ -12,9 +11,10 @@ from src.db.postgres import (
     build_song_drum_sheet_table,
     build_song_source_table,
 )
+from src.env import load_root_dotenv
 
 if __name__ == "__main__":
-    load_dotenv()
+    load_root_dotenv()
     dsn = os.getenv("POSTGRES_DB_DSN")
     schema = os.getenv("POSTGRES_DB_SCHEMA")
 
