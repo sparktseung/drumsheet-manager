@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from fastapi import APIRouter, Depends, Query
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 import sqlalchemy as sa
 from sqlalchemy.engine import Connection, RowMapping
 
@@ -22,6 +24,7 @@ SONG_ORDER_BY = "artist_en NULLS LAST, song_name_en NULLS LAST"
 def _build_base_where(
     *,
     q: str | None,
+    genre: str | None = None,
     in_master: bool | None,
     audio_available: bool | None,
     drum_sheet_available: bool | None,
@@ -33,6 +36,10 @@ def _build_base_where(
     if q:
         conditions.append("(artist_en ILIKE :q OR song_name_en ILIKE :q)")
         params["q"] = f"%{q}%"
+
+    if genre is not None:
+        conditions.append("genre ILIKE :genre")
+        params["genre"] = f"%{genre}%"
 
     if in_master is not None:
         conditions.append("in_master = :in_master")
@@ -144,12 +151,17 @@ def get_playable_songs(
         default=None,
         description="Case-insensitive search on artist_en or song_name_en.",
     ),
+    genre: str | None = Query(
+        default=None,
+        description="Case-insensitive substring filter on genre.",
+    ),
     limit: int = Query(default=200, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
     conn: Connection = Depends(get_db_connection),
 ) -> list[SongRow]:
     where_clause, where_params = _build_base_where(
         q=q,
+        genre=genre,
         in_master=None,
         audio_available=None,
         drum_sheet_available=None,
@@ -261,3 +273,70 @@ def get_recently_updated_songs(
         order_by="updated_at DESC",
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/incomplete",
+    response_model=list[SongRow],
+    summary="List incomplete songs",
+    description=(
+        "Songs that are in master but have no audio, drum sheet,"
+        " or source file synced."
+    ),
+)
+def get_incomplete_songs(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    limit: int = Query(default=200, ge=1, le=1000),
+    offset: int = Query(default=0, ge=0),
+    conn: Connection = Depends(get_db_connection),
+) -> list[SongRow]:
+    base_where, where_params = _build_base_where(
+        q=q,
+        in_master=None,
+        audio_available=None,
+        drum_sheet_available=None,
+        source_available=None,
+    )
+    no_files = (
+        "in_master IS TRUE"
+        " AND audio_available IS NOT TRUE"
+        " AND drum_sheet_available IS NOT TRUE"
+        " AND source_available IS NOT TRUE"
+    )
+    if base_where:
+        where_clause = base_where + " AND " + no_files
+    else:
+        where_clause = "WHERE " + no_files
+    rows = _fetch_rows(
+        conn,
+        VW_ALL_SONGS,
+        where_clause=where_clause,
+        where_params=where_params,
+        limit=limit,
+        offset=offset,
+        order_by=SONG_ORDER_BY,
+    )
+    return [SongRow.model_validate(dict(row)) for row in rows]
+
+
+@router.get(
+    "/{song_id}",
+    response_model=SongRow,
+    summary="Get a single song by ID",
+    description="Fetch metadata for one song from vw_all_songs.",
+)
+def get_song(
+    song_id: UUID,
+    conn: Connection = Depends(get_db_connection),
+) -> SongRow:
+    schema = get_settings().schema
+    stmt = sa.text(
+        f"SELECT * FROM {schema}.{VW_ALL_SONGS} WHERE song_id = :song_id"
+    )
+    row = conn.execute(stmt, {"song_id": str(song_id)}).mappings().first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Song not found.")
+    return SongRow.model_validate(dict(row))
