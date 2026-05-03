@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from .dependencies import close_engine
+from .routes.files import router as files_router
 from .routes.health import router as health_router
 from .routes.songs import router as songs_router
 
@@ -23,3 +24,4 @@ app = FastAPI(
 
 app.include_router(health_router)
 app.include_router(songs_router)
+app.include_router(files_router)
