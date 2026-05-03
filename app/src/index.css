@@ -246,7 +246,7 @@ tbody tr:hover td {
   overflow-x: auto;
   overflow-y: hidden;
   display: flex;
-  align-items: stretch;
+  align-items: center;
 }
 
 .viewer-pages-row {
@@ -254,7 +254,7 @@ tbody tr:hover td {
   flex-direction: row;
   gap: 6px;
   padding: 6px;
-  align-items: flex-start;
+  align-items: center;
   min-width: max-content;
 }
 
@@ -284,6 +284,14 @@ tbody tr:hover td {
   justify-content: flex-end;
 }
 
+.viewer-right-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+}
+
 .viewer-bar-center {
   justify-content: center;
   gap: 0.6rem;
@@ -307,7 +315,7 @@ tbody tr:hover td {
   gap: 0.75rem;
   color: #f3efe8;
   font-size: 0.9rem;
-  min-width: min(36rem, 100%);
+  min-width: min(30rem, 100%);
 }
 
 .viewer-progress-control input {
@@ -316,6 +324,18 @@ tbody tr:hover td {
 
 .viewer-seek-btn {
   min-width: 4.5rem;
+}
+
+.viewer-zoom-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #f3efe8;
+  font-size: 0.9rem;
+}
+
+.viewer-zoom-btn {
+  min-width: 2.7rem;
 }
 
 .viewer-reset-btn {
@@ -362,6 +382,12 @@ tbody tr:hover td {
     width: 100%;
     justify-content: center;
     min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .viewer-right-controls {
+    width: 100%;
+    justify-content: center;
     flex-wrap: wrap;
   }
 

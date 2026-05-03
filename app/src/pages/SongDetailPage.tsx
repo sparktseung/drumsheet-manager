@@ -12,6 +12,13 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 const BAR_HEIGHT = 56;
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 1.2;
+const ZOOM_STEP = 0.05;
+
+function clampZoom(value: number): number {
+    return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+}
 
 function formatTime(seconds: number): string {
     if (!Number.isFinite(seconds) || seconds < 0) {
@@ -35,10 +42,19 @@ export default function SongDetailPage() {
     const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [zoomScale, setZoomScale] = useState(1);
+    const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
     const [numPages, setNumPages] = useState(0);
 
     useEffect(() => {
+        function onResize() {
+            setViewportHeight(window.innerHeight);
+        }
+
+        window.addEventListener("resize", onResize);
+
         return () => {
+            window.removeEventListener("resize", onResize);
             if (startTimeoutRef.current !== null) {
                 window.clearTimeout(startTimeoutRef.current);
             }
@@ -59,7 +75,7 @@ export default function SongDetailPage() {
     const safeBaseUrl = API_BASE_URL.replace(/\/$/, "");
     const drumSheetUrl = `${safeBaseUrl}/files/drum-sheet/${songId}`;
     const audioUrl = `${safeBaseUrl}/files/audio/${songId}`;
-    const pageHeight = window.innerHeight - BAR_HEIGHT;
+    const pageHeight = Math.max(260, viewportHeight - BAR_HEIGHT);
 
     function onDocumentLoadSuccess({ numPages: n }: { numPages: number }) {
         setNumPages(n);
@@ -151,6 +167,10 @@ export default function SongDetailPage() {
         setPlaybackPosition(nextTime);
     }
 
+    function adjustZoom(delta: number) {
+        setZoomScale((value) => clampZoom(value + delta));
+    }
+
     return (
         <div className="viewer-shell">
             <div className="viewer-scroll-area">
@@ -164,6 +184,7 @@ export default function SongDetailPage() {
                             key={i + 1}
                             pageNumber={i + 1}
                             height={pageHeight}
+                            scale={zoomScale}
                             renderTextLayer={false}
                             renderAnnotationLayer={false}
                         />
@@ -203,34 +224,55 @@ export default function SongDetailPage() {
                     </button>
                 </div>
                 <div className="viewer-bar-side viewer-bar-side-right">
-                    <div className="viewer-progress-control">
-                        <button
-                            className="button subtle viewer-seek-btn"
-                            type="button"
-                            onClick={() => skipBy(-10)}
-                            aria-label="Rewind 10 seconds"
-                        >
-                            -10s
-                        </button>
-                        <span>{formatTime(currentTime)}</span>
-                        <input
-                            id="viewer-progress-seconds"
-                            type="range"
-                            min="0"
-                            max={duration || 0}
-                            step="0.1"
-                            value={Math.min(currentTime, duration || 0)}
-                            onChange={onSeek}
-                        />
-                        <span>{formatTime(duration)}</span>
-                        <button
-                            className="button subtle viewer-seek-btn"
-                            type="button"
-                            onClick={() => skipBy(10)}
-                            aria-label="Fast-forward 10 seconds"
-                        >
-                            +10s
-                        </button>
+                    <div className="viewer-right-controls">
+                        <div className="viewer-progress-control">
+                            <button
+                                className="button subtle viewer-seek-btn"
+                                type="button"
+                                onClick={() => skipBy(-10)}
+                                aria-label="Rewind 10 seconds"
+                            >
+                                -10s
+                            </button>
+                            <span>{formatTime(currentTime)}</span>
+                            <input
+                                id="viewer-progress-seconds"
+                                type="range"
+                                min="0"
+                                max={duration || 0}
+                                step="0.1"
+                                value={Math.min(currentTime, duration || 0)}
+                                onChange={onSeek}
+                            />
+                            <span>{formatTime(duration)}</span>
+                            <button
+                                className="button subtle viewer-seek-btn"
+                                type="button"
+                                onClick={() => skipBy(10)}
+                                aria-label="Fast-forward 10 seconds"
+                            >
+                                +10s
+                            </button>
+                        </div>
+                        <div className="viewer-zoom-control" aria-label="PDF zoom controls">
+                            <button
+                                className="button subtle viewer-zoom-btn"
+                                type="button"
+                                onClick={() => adjustZoom(-ZOOM_STEP)}
+                                aria-label="Zoom out"
+                            >
+                                -
+                            </button>
+                            <span>{Math.round(zoomScale * 100)}%</span>
+                            <button
+                                className="button subtle viewer-zoom-btn"
+                                type="button"
+                                onClick={() => adjustZoom(ZOOM_STEP)}
+                                aria-label="Zoom in"
+                            >
+                                +
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <audio
