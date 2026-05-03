@@ -1,35 +1,15 @@
+import type { components } from "../generated/openapi-types";
+
 const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
 
 export const API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL;
 
-export type SongRow = {
-    song_id: string;
-    in_master: boolean;
-    artist_en: string | null;
-    song_name_en: string | null;
-    genre: string | null;
-    artist_local: string | null;
-    song_name_local: string | null;
-    updated_at: string | null;
-    audio_available: boolean;
-    audio_file_path: string | null;
-    drum_sheet_available: boolean;
-    drum_sheet_file_path: string | null;
-    source_available: boolean;
-    source_file_path: string | null;
-};
+export type SongRow = components["schemas"]["SongRow"];
+export type SongCount = components["schemas"]["SongCount"];
+export type SyncJob = components["schemas"]["SyncJob"];
 
-export type SyncJob = {
-    job_id: string;
-    status: "queued" | "running" | "succeeded" | "failed";
-    created_at: string;
-    started_at: string | null;
-    finished_at: string | null;
-    error: string | null;
-};
-
-type SongViewMode = "playable" | "problematic";
+export type SongViewMode = "playable" | "incomplete";
 
 type FetchSongsArgs = {
     mode: SongViewMode;
@@ -96,7 +76,7 @@ export async function fetchSongsCount({
 
     const endpoint =
         mode === "playable" ? "/songs/playable/count" : "/songs/incomplete/count";
-    const data = await requestJson<{ total: number }>(buildUrl(endpoint, query));
+    const data = await requestJson<SongCount>(buildUrl(endpoint, query));
     return data.total;
 }
 
