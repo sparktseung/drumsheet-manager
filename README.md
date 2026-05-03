@@ -16,6 +16,7 @@
   - [API Backend (FastAPI)](#api-backend-fastapi)
     - [Start API](#start-api)
     - [Available Endpoints](#available-endpoints)
+  - [License](#license)
 
 ## Overview
 
@@ -220,3 +221,7 @@ Environment variables:
   - `GET /health`
 
 Interactive docs are available at `/docs` when the API is running.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
