@@ -21,7 +21,6 @@ import uuid
 
 
 class SongMasterManager:
-
     REQUIRED_COLUMNS = {"artist_en", "song_name_en"}
     VALID_DRUM_SHEET_EXTENSIONS = {".pdf"}
     VALID_AUDIO_EXTENSIONS = {".mp3", ".wav"}

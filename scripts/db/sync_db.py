@@ -11,7 +11,6 @@ from src.db.postgres import (
 )
 
 if __name__ == "__main__":
-
     load_dotenv()
     dsn = os.getenv("POSTGRES_DB_DSN")
     schema = os.getenv("POSTGRES_DB_SCHEMA")
