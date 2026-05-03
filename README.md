@@ -1,6 +1,7 @@
 # Drum Sheet Manager
 
 - [Drum Sheet Manager](#drum-sheet-manager)
+  - [Overview](#overview)
   - [Requirements](#requirements)
     - [Dependencies](#dependencies)
     - [Clone This Repo](#clone-this-repo)
@@ -14,6 +15,13 @@
   - [API Backend (FastAPI)](#api-backend-fastapi)
     - [Start API](#start-api)
     - [Available Endpoints](#available-endpoints)
+
+## Overview
+
+A local web app to manage drum sheet music, built with FastAPI and React. The app reads from a master spreadsheet and a folder of raw data (Audio, PDFs, MuseScore files, etc.) to populate a database of songs. The frontend allows users to browse and filter songs, view details, and play the audio files along side the drumsheet.
+
+![Homepage](demo/homepage.png)
+![Song Detail Page](demo/songpage.png)
 
 
 ## Requirements
