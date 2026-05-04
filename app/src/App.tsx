@@ -134,6 +134,7 @@ function App() {
         <SongTable
           rows={rows}
           loading={loading}
+          mode={mode}
           onPlaySong={(songId) => window.open(`/songs/${songId}`, "_blank")}
         />
 

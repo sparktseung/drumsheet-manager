@@ -1,12 +1,32 @@
-import type { SongRow } from "../api/client";
+import type { SongRow, SongViewMode } from "../api/client";
 
 type SongTableProps = {
     rows: SongRow[];
     loading: boolean;
+    mode: SongViewMode;
     onPlaySong: (songId: string) => void;
 };
 
-function SongTable({ rows, loading, onPlaySong }: SongTableProps) {
+function getMissingStatus(song: SongRow): string {
+    const missingAudio = !song.audio_available;
+    const missingDrumSheet = !song.drum_sheet_available;
+
+    if (missingAudio && missingDrumSheet) {
+        return "Missing Both";
+    }
+
+    if (missingAudio) {
+        return "Missing Audio";
+    }
+
+    if (missingDrumSheet) {
+        return "Missing Drumsheet";
+    }
+
+    return "Ready";
+}
+
+function SongTable({ rows, loading, mode, onPlaySong }: SongTableProps) {
     return (
         <div className="table-wrap">
             <table>
@@ -33,13 +53,17 @@ function SongTable({ rows, loading, onPlaySong }: SongTableProps) {
                             <td>{song.artist_local ?? <span className="muted">-</span>}</td>
                             <td>{song.song_name_local ?? <span className="muted">-</span>}</td>
                             <td className="col-play">
-                                <button
-                                    className="button row-action-button"
-                                    type="button"
-                                    onClick={() => onPlaySong(song.song_id)}
-                                >
-                                    Play
-                                </button>
+                                {mode === "playable" ? (
+                                    <button
+                                        className="button row-action-button"
+                                        type="button"
+                                        onClick={() => onPlaySong(song.song_id)}
+                                    >
+                                        Play
+                                    </button>
+                                ) : (
+                                    <span>{getMissingStatus(song)}</span>
+                                )}
                             </td>
                         </tr>
                     ))}
