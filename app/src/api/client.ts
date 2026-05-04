@@ -9,7 +9,7 @@ export type SongRow = components["schemas"]["SongRow"];
 export type SongCount = components["schemas"]["SongCount"];
 export type SyncJob = components["schemas"]["SyncJob"];
 
-export type SongViewMode = "playable" | "incomplete";
+export type SongViewMode = "playable" | "unplayable";
 
 type FetchSongsArgs = {
     mode: SongViewMode;
@@ -60,7 +60,7 @@ export async function fetchSongs({
         query.set("q", searchText.trim());
     }
 
-    const endpoint = mode === "playable" ? "/songs/playable" : "/songs/incomplete";
+    const endpoint = mode === "playable" ? "/songs/playable" : "/songs/unplayable";
     return requestJson<SongRow[]>(buildUrl(endpoint, query));
 }
 
@@ -75,7 +75,7 @@ export async function fetchSongsCount({
     }
 
     const endpoint =
-        mode === "playable" ? "/songs/playable/count" : "/songs/incomplete/count";
+        mode === "playable" ? "/songs/playable/count" : "/songs/unplayable/count";
     const data = await requestJson<SongCount>(buildUrl(endpoint, query));
     return data.total;
 }

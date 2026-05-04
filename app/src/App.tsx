@@ -82,8 +82,8 @@ function App() {
     setPage(1);
   }
 
-  function onOpenIncompleteSongs() {
-    setMode("incomplete");
+  function onOpenUnplayableSongs() {
+    setMode("unplayable");
     setPage(1);
   }
 
@@ -101,19 +101,19 @@ function App() {
             Sync Local Songs
           </button>
           <button
-            className={`button ${mode === "incomplete" ? "active" : ""}`}
+            className={`button ${mode === "unplayable" ? "active" : ""}`}
             type="button"
-            onClick={onOpenIncompleteSongs}
+            onClick={onOpenUnplayableSongs}
           >
-            View Incomplete Songs
+            View Unplayable Songs
           </button>
         </div>
       </header>
 
       <section className="panel">
         <div className="panel-header">
-          <h2>{mode === "playable" ? "Playable Songs" : "Incomplete Songs"}</h2>
-          {mode === "incomplete" ? (
+          <h2>{mode === "playable" ? "Playable Songs" : "Unplayable Songs"}</h2>
+          {mode === "unplayable" ? (
             <button className="button subtle" type="button" onClick={onOpenPlayableSongs}>
               Back To Playable Songs
             </button>

@@ -181,46 +181,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/songs/incomplete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List incomplete songs
-         * @description Songs that are in master but have no audio, drum sheet, or source file synced.
-         */
-        get: operations["get_incomplete_songs_songs_incomplete_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/songs/incomplete/count": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Count incomplete songs
-         * @description Get total count for incomplete songs pagination.
-         */
-        get: operations["get_incomplete_songs_count_songs_incomplete_count_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/songs/{song_id}": {
         parameters: {
             query?: never;
@@ -709,72 +669,6 @@ export interface operations {
         };
     };
     get_recently_updated_songs_count_songs_recent_count_get: {
-        parameters: {
-            query?: {
-                /** @description Case-insensitive search on artist_en or song_name_en. */
-                q?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SongCount"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_incomplete_songs_songs_incomplete_get: {
-        parameters: {
-            query?: {
-                /** @description Case-insensitive search on artist_en or song_name_en. */
-                q?: string | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SongRow"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_incomplete_songs_count_songs_incomplete_count_get: {
         parameters: {
             query?: {
                 /** @description Case-insensitive search on artist_en or song_name_en. */
