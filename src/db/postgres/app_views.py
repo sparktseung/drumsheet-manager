@@ -74,6 +74,7 @@ class AppViewManager:
                 (
                     SELECT MAX(v.updated_at)
                     FROM (VALUES
+                        (m.updated_at),
                         (a.updated_at),
                         (d.updated_at),
                         (s.updated_at)
