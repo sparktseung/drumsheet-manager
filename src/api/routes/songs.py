@@ -78,6 +78,16 @@ def _default_song_order_by(table: sa.Table) -> tuple[ColumnElement[Any], ...]:
     )
 
 
+def _recently_updated_order_by(
+    table: sa.Table,
+) -> tuple[ColumnElement[Any], ...]:
+    return (
+        table.c.updated_at.desc().nulls_last(),
+        table.c.artist_en.asc().nulls_last(),
+        table.c.song_name_en.asc().nulls_last(),
+    )
+
+
 def _fetch_rows(
     conn: Connection,
     table: sa.Table,
@@ -231,7 +241,7 @@ def get_playable_songs(
         filters=filters,
         limit=limit,
         offset=offset,
-        order_by=_default_song_order_by(table),
+        order_by=_recently_updated_order_by(table),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
 
@@ -374,7 +384,7 @@ def get_recently_updated_songs(
         filters=filters,
         limit=limit,
         offset=offset,
-        order_by=(table.c.updated_at.desc(),),
+        order_by=_recently_updated_order_by(table),
     )
     return [SongRow.model_validate(dict(row)) for row in rows]
 

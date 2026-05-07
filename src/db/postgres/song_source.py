@@ -124,11 +124,18 @@ class SongSourceTable(TableBase):
         }
         if not update_columns:
             raise ValueError("df_incoming has no updatable data columns")
+        changed_condition = sa.or_(
+            *(
+                table.c[col].is_distinct_from(stmt.excluded[col])
+                for col in update_columns
+            )
+        )
         update_columns["updated_at"] = sa.func.now()
 
         upsert_stmt = stmt.on_conflict_do_update(
             index_elements=[table.c[SONG_SOURCE_PRIMARY_KEY]],
             set_=update_columns,
+            where=changed_condition,
         )
 
         with self.transaction() as conn:

@@ -10,7 +10,7 @@ import SyncStatus from "./components/SyncStatus.tsx";
 import { useSongsData } from "./hooks/useSongsData.ts";
 import { useSyncStatus } from "./hooks/useSyncStatus.ts";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 
 type PaginationItem = number | "ellipsis-left" | "ellipsis-right";
 
