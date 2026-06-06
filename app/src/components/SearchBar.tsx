@@ -23,6 +23,11 @@ function SearchBar({
                 placeholder="Search genre, artist, or song"
                 value={searchInput}
                 onChange={(event) => onSearchInputChange(event.target.value)}
+                onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                        onSearch();
+                    }
+                }}
             />
             <button className="button" type="button" onClick={onSearch}>
                 Search
