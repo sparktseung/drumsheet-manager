@@ -37,7 +37,7 @@ function SearchBar({
             </button>
             {onRandom ? (
                 <button
-                    className="button subtle"
+                    className="button rainbow"
                     type="button"
                     onClick={onRandom}
                     disabled={randomDisabled}

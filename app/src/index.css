@@ -141,6 +141,30 @@ body {
   outline: 2px solid #173e34;
 }
 
+.button.rainbow {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 100, 100, 0.8) 0%,
+    rgba(255, 170, 100, 0.8) 16.66%,
+    rgba(255, 255, 100, 0.8) 33.32%,
+    rgba(150, 255, 100, 0.8) 50%,
+    rgba(100, 200, 255, 0.8) 66.66%,
+    rgba(150, 100, 255, 0.8) 83.32%,
+    rgba(200, 100, 255, 0.8) 100%
+  );
+  color: black;
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.button.rainbow:hover {
+  opacity: 0.9;
+}
+
+.button.rainbow:disabled {
+  opacity: 0.5;
+}
+
 .error {
   margin: 0.8rem 0;
   color: var(--danger);
