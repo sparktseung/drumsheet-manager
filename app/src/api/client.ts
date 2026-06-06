@@ -64,6 +64,17 @@ export async function fetchSongs({
     return requestJson<SongRow[]>(buildUrl(endpoint, query));
 }
 
+export async function fetchRandomPlayableSong(searchText: string): Promise<SongRow> {
+    const query = new URLSearchParams();
+    if (searchText.trim()) {
+        query.set("q", searchText.trim());
+    }
+
+    return requestJson<SongRow>(
+        buildUrl("/songs/playable/random", query),
+    );
+}
+
 export async function fetchSongsCount({
     mode,
     searchText,

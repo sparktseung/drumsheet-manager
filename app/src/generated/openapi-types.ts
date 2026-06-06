@@ -81,6 +81,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/songs/playable/random": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a random playable song
+         * @description Return a random playable song that matches the optional search query.
+         */
+        get: operations["get_random_playable_song_songs_playable_random_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/songs/playable/count": {
         parameters: {
             query?: never;
@@ -513,6 +533,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SongRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_random_playable_song_songs_playable_random_get: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive search on artist_en or song_name_en. */
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SongRow"];
                 };
             };
             /** @description Validation Error */

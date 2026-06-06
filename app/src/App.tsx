@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import {
+  fetchRandomPlayableSong,
   type SongViewMode,
 } from "./api/client";
 import Pagination from "./components/Pagination.tsx";
@@ -20,6 +21,8 @@ function App() {
   const [searchInput, setSearchInput] = useState("");
   const [searchText, setSearchText] = useState("");
   const [refreshToken, setRefreshToken] = useState(0);
+  const [randomLoading, setRandomLoading] = useState(false);
+  const [randomError, setRandomError] = useState<string | null>(null);
 
   const handlePageOverflow = useCallback((nextPage: number) => {
     setPage(nextPage);
@@ -82,6 +85,31 @@ function App() {
     setPage(1);
   }
 
+  const onRandomSong = useCallback(async () => {
+    setRandomError(null);
+
+    const newTab = window.open("", "_blank");
+    if (!newTab) {
+      setRandomError("Unable to open new tab for a random song.");
+      return;
+    }
+
+    setRandomLoading(true);
+    try {
+      const randomSong = await fetchRandomPlayableSong(searchText);
+      newTab.location.href = `/songs/${randomSong.song_id}`;
+    } catch (randomError_) {
+      newTab.close();
+      setRandomError(
+        randomError_ instanceof Error
+          ? randomError_.message
+          : "Failed to open a random song.",
+      );
+    } finally {
+      setRandomLoading(false);
+    }
+  }, [searchText]);
+
   function onOpenUnplayableSongs() {
     setMode("unplayable");
     setPage(1);
@@ -127,9 +155,12 @@ function App() {
           onSearchInputChange={setSearchInput}
           onSearch={onSearch}
           onReset={onResetSearch}
+          onRandom={mode === "playable" ? onRandomSong : undefined}
+          randomDisabled={randomLoading}
         />
 
         {error ? <p className="error">{error}</p> : null}
+        {randomError ? <p className="error">{randomError}</p> : null}
 
         <SongTable
           rows={rows}

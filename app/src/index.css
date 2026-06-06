@@ -92,12 +92,15 @@ body {
 
 .search-row {
   margin-top: 1rem;
-  display: grid;
-  grid-template-columns: minmax(240px, 1fr) auto auto;
+  display: flex;
+  align-items: center;
   gap: 0.65rem;
+  flex-wrap: nowrap;
 }
 
 .search-input {
+  flex: 1;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.7rem 0.85rem;

@@ -247,6 +247,35 @@ def get_playable_songs(
 
 
 @router.get(
+    "/playable/random",
+    response_model=SongRow,
+    summary="Get a random playable song",
+    description=(
+        "Return a random playable song that matches the optional search query."
+    ),
+)
+def get_random_playable_song(
+    q: str | None = Query(
+        default=None,
+        description="Case-insensitive search on artist_en or song_name_en.",
+    ),
+    conn: Connection = Depends(get_db_connection),
+) -> SongRow:
+    table = _get_view(conn, VW_PLAYABLE_SONGS)
+    filters = _build_base_filters(table=table, q=q)
+    stmt = (
+        sa.select(table)
+        .where(sa.and_(*filters))
+        .order_by(sa.func.random())
+        .limit(1)
+    )
+    row = conn.execute(stmt).mappings().first()
+    if row is None:
+        raise HTTPException(status_code=404, detail="No playable song found.")
+    return SongRow.model_validate(dict(row))
+
+
+@router.get(
     "/playable/count",
     response_model=SongCount,
     summary="Count playable songs",

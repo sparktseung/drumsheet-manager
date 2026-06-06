@@ -3,6 +3,8 @@ type SearchBarProps = {
     onSearchInputChange: (value: string) => void;
     onSearch: () => void;
     onReset: () => void;
+    onRandom?: () => void;
+    randomDisabled?: boolean;
 };
 
 function SearchBar({
@@ -10,6 +12,8 @@ function SearchBar({
     onSearchInputChange,
     onSearch,
     onReset,
+    onRandom,
+    randomDisabled,
 }: SearchBarProps) {
     return (
         <div className="search-row">
@@ -26,6 +30,16 @@ function SearchBar({
             <button className="button subtle" type="button" onClick={onReset}>
                 Reset Search
             </button>
+            {onRandom ? (
+                <button
+                    className="button subtle"
+                    type="button"
+                    onClick={onRandom}
+                    disabled={randomDisabled}
+                >
+                    {randomDisabled ? "Random..." : "Random"}
+                </button>
+            ) : null}
         </div>
     );
 }

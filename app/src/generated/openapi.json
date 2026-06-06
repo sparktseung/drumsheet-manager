@@ -402,6 +402,58 @@
         }
       }
     },
+    "/songs/playable/random": {
+      "get": {
+        "tags": [
+          "songs"
+        ],
+        "summary": "Get a random playable song",
+        "description": "Return a random playable song that matches the optional search query.",
+        "operationId": "get_random_playable_song_songs_playable_random_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive search on artist_en or song_name_en.",
+              "title": "Q"
+            },
+            "description": "Case-insensitive search on artist_en or song_name_en."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SongRow"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/songs/playable/count": {
       "get": {
         "tags": [
