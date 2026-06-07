@@ -89,21 +89,37 @@ export default function SongDetailPage() {
         };
     }, []);
 
-    function ensureAudioGraph() {
-        if (audioContextRef.current) return;
+    const audioGraphReadyRef = useRef(false);
+
+    async function ensureAudioGraph(): Promise<boolean> {
+        if (audioGraphReadyRef.current) return true;
+        if (audioContextRef.current) return true;
 
         const audio = audioRef.current;
-        if (!audio) return;
+        if (!audio) return false;
 
-        const ctx = new AudioContext();
-        const source = ctx.createMediaElementSource(audio);
-        const gainNode = ctx.createGain();
-        gainNode.gain.value = gainDb != null ? 10 ** (gainDb / 20) : 1;
-        source.connect(gainNode);
-        gainNode.connect(ctx.destination);
+        try {
+            const ctx = new AudioContext();
+            const source = ctx.createMediaElementSource(audio);
+            const gainNode = ctx.createGain();
+            gainNode.gain.value = gainDb != null ? 10 ** (gainDb / 20) : 1;
+            source.connect(gainNode);
+            gainNode.connect(ctx.destination);
 
-        audioContextRef.current = ctx;
-        gainNodeRef.current = gainNode;
+            audioContextRef.current = ctx;
+            gainNodeRef.current = gainNode;
+
+            if (ctx.state === "suspended") {
+                await ctx.resume();
+            }
+
+            audioGraphReadyRef.current = true;
+            return true;
+        } catch {
+            audioContextRef.current = null;
+            gainNodeRef.current = null;
+            return false;
+        }
     }
 
     useEffect(() => {
@@ -142,12 +158,22 @@ export default function SongDetailPage() {
         setCountdownSeconds(null);
     }
 
-    function togglePlay() {
+    async function togglePlay() {
         const audio = audioRef.current;
         if (!audio) return;
 
-        ensureAudioGraph();
-        void audioContextRef.current?.resume();
+        const graphReady = await ensureAudioGraph();
+
+        if (!graphReady) {
+            if (pendingStart) clearPendingStart();
+            if (playing) {
+                audio.pause();
+                setPlaying(false);
+            } else {
+                void audio.play().catch(() => setPlaying(false));
+            }
+            return;
+        }
 
         if (pendingStart) {
             clearPendingStart();
@@ -329,6 +355,7 @@ export default function SongDetailPage() {
                 <audio
                     ref={audioRef}
                     src={audioUrl}
+                    crossOrigin="anonymous"
                     onLoadedMetadata={(event) => {
                         setDuration(event.currentTarget.duration || 0);
                     }}
