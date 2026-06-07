@@ -179,15 +179,6 @@ body {
 
 .table-wrap {
   position: relative;
-}
-
-.error {
-  margin: 0.8rem 0;
-  color: var(--danger);
-  font-weight: 600;
-}
-
-.table-wrap {
   margin-top: 0.8rem;
   overflow-x: auto;
   border: 1px solid var(--line);
@@ -197,7 +188,14 @@ body {
 
 table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
+}
+
+.error {
+  margin: 0.8rem 0;
+  color: var(--danger);
+  font-weight: 600;
 }
 
 th,
@@ -205,6 +203,9 @@ td {
   text-align: left;
   padding: 0.72rem;
   border-bottom: 1px solid #efe3d0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 th {

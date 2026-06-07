@@ -46,6 +46,12 @@ function SongTable({ rows, loading, mode, showLocal }: SongTableProps) {
     return (
         <div className="table-wrap">
             <table>
+                <colgroup>
+                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "37%" }} />
+                    <col style={{ width: "37%" }} />
+                    <col style={{ width: "14%" }} />
+                </colgroup>
                 <thead>
                     <tr>
                         <th scope="col">Genre</th>
@@ -68,16 +74,16 @@ function SongTable({ rows, loading, mode, showLocal }: SongTableProps) {
                     ) : (
                         rows.map((song) => (
                             <tr key={song.song_id}>
-                                <td>{song.genre ?? <span className="muted">-</span>}</td>
+                                <td><span className={song.genre ? undefined : "muted"}>{song.genre ?? "-"}</span></td>
                                 <td>
-                                    {showLocal
-                                        ? (song.artist_local ?? <span className="muted">-</span>)
-                                        : (song.artist_en ?? <span className="muted">-</span>)}
+                                    <span className={showLocal ? (song.artist_local ? undefined : "muted") : (song.artist_en ? undefined : "muted")}>
+                                        {showLocal ? (song.artist_local ?? "-") : (song.artist_en ?? "-")}
+                                    </span>
                                 </td>
                                 <td>
-                                    {showLocal
-                                        ? (song.song_name_local ?? <span className="muted">-</span>)
-                                        : (song.song_name_en ?? <span className="muted">-</span>)}
+                                    <span className={showLocal ? (song.song_name_local ? undefined : "muted") : (song.song_name_en ? undefined : "muted")}>
+                                        {showLocal ? (song.song_name_local ?? "-") : (song.song_name_en ?? "-")}
+                                    </span>
                                 </td>
                                 <td className="col-play">
                                     {mode === "playable" ? (
