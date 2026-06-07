@@ -131,9 +131,9 @@ function App() {
           <button
             className={`button ${mode === "unplayable" ? "active" : ""}`}
             type="button"
-            onClick={onOpenUnplayableSongs}
+            onClick={mode === "playable" ? onOpenUnplayableSongs : onOpenPlayableSongs}
           >
-            View Unplayable Songs
+            {mode === "playable" ? "View Unplayable Songs" : "Back to Playable Songs"}
           </button>
         </div>
       </header>
@@ -142,11 +142,6 @@ function App() {
         <div className="panel-header">
           <h2>{mode === "playable" ? "Playable Songs" : "Unplayable Songs"}</h2>
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            {mode === "unplayable" ? (
-              <button className="button subtle" type="button" onClick={onOpenPlayableSongs}>
-                Back To Playable Songs
-              </button>
-            ) : null}
             <button
               className="button subtle"
               type="button"
