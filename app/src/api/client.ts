@@ -91,6 +91,10 @@ export async function fetchSongsCount({
     return data.total;
 }
 
+export async function fetchSong(songId: string): Promise<SongRow> {
+    return requestJson<SongRow>(buildUrl(`/songs/${encodeURIComponent(songId)}`));
+}
+
 export async function startSyncJob(): Promise<SyncJob> {
     return requestJson<SyncJob>(buildUrl("/admin/sync"), {
         method: "POST",

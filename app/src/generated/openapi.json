@@ -1201,6 +1201,17 @@
             ],
             "title": "Audio File Path"
           },
+          "loudness_gain_db": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loudness Gain Db"
+          },
           "drum_sheet_available": {
             "type": "boolean",
             "title": "Drum Sheet Available"

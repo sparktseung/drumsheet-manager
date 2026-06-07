@@ -17,6 +17,7 @@ class SongRow(BaseModel):
     updated_at: datetime | None = None
     audio_available: bool
     audio_file_path: str | None = None
+    loudness_gain_db: float | None = None
     drum_sheet_available: bool
     drum_sheet_file_path: str | None = None
     source_available: bool

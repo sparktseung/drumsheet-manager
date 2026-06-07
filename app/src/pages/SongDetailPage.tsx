@@ -4,7 +4,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/TextLayer.css";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 
-import { API_BASE_URL } from "../api/client";
+import { API_BASE_URL, fetchSong } from "../api/client";
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     "pdfjs-dist/build/pdf.worker.min.mjs",
@@ -36,15 +36,37 @@ export default function SongDetailPage() {
     const audioRef = useRef<HTMLAudioElement>(null);
     const startTimeoutRef = useRef<number | null>(null);
     const countdownIntervalRef = useRef<number | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const gainNodeRef = useRef<GainNode | null>(null);
     const [playing, setPlaying] = useState(false);
     const [pendingStart, setPendingStart] = useState(false);
     const [delaySeconds, setDelaySeconds] = useState(3);
     const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [gainDb, setGainDb] = useState<number | null>(null);
     const [zoomScale, setZoomScale] = useState(1);
     const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
     const [numPages, setNumPages] = useState(0);
+
+    useEffect(() => {
+        if (!songId) return;
+
+        let cancelled = false;
+        fetchSong(songId)
+            .then((song) => {
+                if (!cancelled && song.loudness_gain_db != null) {
+                    setGainDb(song.loudness_gain_db);
+                }
+            })
+            .catch(() => {
+                /* play without gain adjustment */
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [songId]);
 
     useEffect(() => {
         function onResize() {
@@ -61,8 +83,34 @@ export default function SongDetailPage() {
             if (countdownIntervalRef.current !== null) {
                 window.clearInterval(countdownIntervalRef.current);
             }
+            audioContextRef.current?.close().catch(() => {});
+            audioContextRef.current = null;
+            gainNodeRef.current = null;
         };
     }, []);
+
+    function ensureAudioGraph() {
+        if (audioContextRef.current) return;
+
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        const ctx = new AudioContext();
+        const source = ctx.createMediaElementSource(audio);
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = gainDb != null ? 10 ** (gainDb / 20) : 1;
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        audioContextRef.current = ctx;
+        gainNodeRef.current = gainNode;
+    }
+
+    useEffect(() => {
+        const node = gainNodeRef.current;
+        if (!node || gainDb == null) return;
+        node.gain.value = 10 ** (gainDb / 20);
+    }, [gainDb]);
 
     if (!songId) {
         return (
@@ -97,6 +145,9 @@ export default function SongDetailPage() {
     function togglePlay() {
         const audio = audioRef.current;
         if (!audio) return;
+
+        ensureAudioGraph();
+        void audioContextRef.current?.resume();
 
         if (pendingStart) {
             clearPendingStart();

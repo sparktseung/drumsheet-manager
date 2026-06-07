@@ -22,6 +22,7 @@ SONG_AUDIO_DATA_COLUMNS = frozenset(
         "artist_en",
         "song_name_en",
         "last_modified_ts",
+        "loudness_gain_db",
     }
 )
 SONG_AUDIO_TRACKING_COLUMNS = frozenset({"created_at", "updated_at"})
@@ -56,6 +57,7 @@ def build_song_audio_table(
         sa.Column("artist_en", sa.String(255), nullable=False),
         sa.Column("song_name_en", sa.String(255), nullable=False),
         sa.Column("last_modified_ts", sa.DateTime, nullable=False),
+        sa.Column("loudness_gain_db", sa.REAL, nullable=True),
         sa.Column("created_at", sa.DateTime, server_default=sa.func.now()),
         sa.Column(
             "updated_at",

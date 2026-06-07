@@ -354,6 +354,8 @@ export interface components {
             audio_available: boolean;
             /** Audio File Path */
             audio_file_path?: string | null;
+            /** Loudness Gain Db */
+            loudness_gain_db?: number | null;
             /** Drum Sheet Available */
             drum_sheet_available: boolean;
             /** Drum Sheet File Path */

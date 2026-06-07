@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import subprocess
+
 import sqlalchemy as sa
 import polars as pl
 from sqlalchemy.engine import Engine
@@ -19,6 +22,8 @@ from src.db.postgres import (
 from src.db.song_master.constants import SONG_MASTER_LIST_UUID
 from src.db.song_master.manager import SongMasterManager
 
+LOUDNESS_TARGET = -16  # Target integrated loudness in LUFS
+
 
 def _filter_child_rows_by_master_ids(
     *,
@@ -35,6 +40,88 @@ def _filter_child_rows_by_master_ids(
         return df_child
 
     return df_child.filter(pl.col("song_id").is_in(list(master_song_ids)))
+
+
+def _analyze_loudness(file_path: str) -> float | None:
+    """Run FFmpeg loudnorm analysis on an audio file.
+
+    Returns the target_offset (dB) needed to reach LOUDNESS_TARGET,
+    or None if analysis fails.
+    """
+    cmd = [
+        "ffmpeg",
+        "-i", file_path,
+        "-af", f"loudnorm=I={LOUDNESS_TARGET}:print_format=json",
+        "-f", "null",
+        "-",
+    ]
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        stderr = result.stderr
+        json_start = stderr.find("{")
+        json_end = stderr.rfind("}") + 1
+        if json_start >= 0 and json_end > json_start:
+            data = json.loads(stderr[json_start:json_end])
+            return float(data["target_offset"])
+    except (subprocess.TimeoutExpired, json.JSONDecodeError, ValueError, OSError):
+        pass
+    return None
+
+
+def _load_existing_gains(engine: Engine, schema: str) -> dict[str, dict]:
+    stmt = sa.text(
+        f"SELECT song_id, file_path_hash, last_modified_ts, loudness_gain_db"
+        f" FROM {schema}.song_audio"
+    )
+    with engine.connect() as conn:
+        rows = conn.execute(stmt).mappings().all()
+    return {
+        str(row["song_id"]): {
+            "file_path_hash": row["file_path_hash"],
+            "last_modified_ts": row["last_modified_ts"],
+            "loudness_gain_db": row["loudness_gain_db"],
+        }
+        for row in rows
+    }
+
+
+def _add_loudness_gain_column(
+    engine: Engine,
+    schema: str,
+    df_song_audio: pl.DataFrame,
+) -> pl.DataFrame:
+    """Add loudness_gain_db column to df_song_audio.
+
+    New or changed files are analyzed via FFmpeg loudnorm; existing
+    unchanged files keep their cached gain value from the database.
+    """
+    if df_song_audio.is_empty():
+        return df_song_audio
+
+    existing = _load_existing_gains(engine, schema)
+
+    gains: list[float | None] = []
+    for row in df_song_audio.to_dicts():
+        song_id = row["song_id"]
+        cached = existing.get(song_id)
+        if (
+            cached is not None
+            and cached["file_path_hash"] == row["file_path_hash"]
+            and cached["last_modified_ts"] == row.get("last_modified_ts")
+        ):
+            gains.append(cached["loudness_gain_db"])
+        else:
+            gain = _analyze_loudness(row["file_path"])
+            gains.append(gain)
+
+    return df_song_audio.with_columns(
+        pl.Series("loudness_gain_db", gains, dtype=pl.Float32),
+    )
 
 
 def create_tables_if_not_exist(
@@ -107,6 +194,12 @@ def run_sync_once(
             engine=engine,
         )
         smt.merge(df_song_master)
+
+        df_song_audio = _add_loudness_gain_column(
+            engine=engine,
+            schema=schema,
+            df_song_audio=df_song_audio,
+        )
 
         sat = SongAudioTable(
             schema=schema,
