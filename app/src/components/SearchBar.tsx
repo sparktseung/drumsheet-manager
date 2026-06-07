@@ -1,7 +1,6 @@
 type SearchBarProps = {
     searchInput: string;
     onSearchInputChange: (value: string) => void;
-    onSearch: () => void;
     onReset: () => void;
     onRandom?: () => void;
     randomDisabled?: boolean;
@@ -10,7 +9,6 @@ type SearchBarProps = {
 function SearchBar({
     searchInput,
     onSearchInputChange,
-    onSearch,
     onReset,
     onRandom,
     randomDisabled,
@@ -20,29 +18,21 @@ function SearchBar({
             <input
                 className="search-input"
                 type="text"
-                placeholder="Search genre, artist, or song"
+                placeholder="Search artist or song name (local/english)"
                 value={searchInput}
                 onChange={(event) => onSearchInputChange(event.target.value)}
-                onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                        onSearch();
-                    }
-                }}
             />
-            <button className="button" type="button" onClick={onSearch}>
-                Search
-            </button>
             <button className="button subtle" type="button" onClick={onReset}>
                 Reset Search
             </button>
             {onRandom ? (
                 <button
-                    className="button rainbow"
+                    className="button burnished"
                     type="button"
                     onClick={onRandom}
                     disabled={randomDisabled}
                 >
-                    {randomDisabled ? "Random..." : "Random"}
+                    {randomDisabled ? "Loading..." : "Random Play"}
                 </button>
             ) : null}
         </div>

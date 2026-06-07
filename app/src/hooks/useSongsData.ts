@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
     fetchSongs,
@@ -23,6 +23,10 @@ type UseSongsDataResult = {
     error: string | null;
 };
 
+function cacheKey(mode: SongViewMode, searchText: string): string {
+    return `${mode}::${searchText}`;
+}
+
 export function useSongsData({
     mode,
     searchText,
@@ -35,6 +39,12 @@ export function useSongsData({
     const [totalSongs, setTotalSongs] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const cachedCountKey = useRef<string | null>(null);
+    const totalSongsRef = useRef(totalSongs);
+
+    useEffect(() => {
+        totalSongsRef.current = totalSongs;
+    }, [totalSongs]);
 
     const offset = useMemo(() => (page - 1) * pageSize, [page, pageSize]);
 
@@ -45,6 +55,10 @@ export function useSongsData({
             setLoading(true);
             setError(null);
 
+            const currentKey = cacheKey(mode, searchText);
+            const countChanged = cachedCountKey.current !== currentKey;
+            const count = totalSongsRef.current;
+
             try {
                 const [songs, total] = await Promise.all([
                     fetchSongs({
@@ -53,10 +67,9 @@ export function useSongsData({
                         limit: pageSize,
                         offset,
                     }),
-                    fetchSongsCount({
-                        mode,
-                        searchText,
-                    }),
+                    countChanged
+                        ? fetchSongsCount({ mode, searchText })
+                        : Promise.resolve(count),
                 ]);
 
                 if (cancelled) {
@@ -64,9 +77,13 @@ export function useSongsData({
                 }
 
                 setRows(songs);
-                setTotalSongs(total);
+                if (countChanged) {
+                    setTotalSongs(total);
+                    cachedCountKey.current = currentKey;
+                }
 
-                const maxPage = Math.max(1, Math.ceil(total / pageSize));
+                const resolvedCount = countChanged ? total : count;
+                const maxPage = Math.max(1, Math.ceil(resolvedCount / pageSize));
                 if (page > maxPage) {
                     onPageOverflow(maxPage);
                 }

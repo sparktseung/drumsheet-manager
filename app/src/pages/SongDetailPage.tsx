@@ -38,7 +38,7 @@ export default function SongDetailPage() {
     const countdownIntervalRef = useRef<number | null>(null);
     const [playing, setPlaying] = useState(false);
     const [pendingStart, setPendingStart] = useState(false);
-    const [delaySeconds, setDelaySeconds] = useState(5);
+    const [delaySeconds, setDelaySeconds] = useState(3);
     const [countdownSeconds, setCountdownSeconds] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -194,7 +194,7 @@ export default function SongDetailPage() {
             <div className="viewer-bar">
                 <div className="viewer-bar-side viewer-bar-side-left">
                     <label className="viewer-delay-control" htmlFor="viewer-delay-seconds">
-                        <span>Start Song in {delaySeconds}s</span>
+                        <span title="Gives you time to grab your sticks before playback starts">Start Song in {delaySeconds}s</span>
                         <input
                             id="viewer-delay-seconds"
                             type="range"

@@ -1,10 +1,12 @@
 import type { SongRow, SongViewMode } from "../api/client";
 
+const SKELETON_ROWS = 5;
+
 type SongTableProps = {
     rows: SongRow[];
     loading: boolean;
     mode: SongViewMode;
-    onPlaySong: (songId: string) => void;
+    showLocal?: boolean;
 };
 
 function getMissingStatus(song: SongRow): string {
@@ -26,49 +28,79 @@ function getMissingStatus(song: SongRow): string {
     return "Ready";
 }
 
-function SongTable({ rows, loading, mode, onPlaySong }: SongTableProps) {
+function SkeletonRow() {
+    return (
+        <tr aria-hidden="true">
+            <td><span className="skeleton-box" /></td>
+            <td><span className="skeleton-box" /></td>
+            <td><span className="skeleton-box" /></td>
+            <td><span className="skeleton-box" style={{ width: "4.75rem" }} /></td>
+        </tr>
+    );
+}
+
+function SongTable({ rows, loading, mode, showLocal }: SongTableProps) {
+    const artistHeader = showLocal ? "Artist (local)" : "Artist";
+    const songHeader = showLocal ? "Song (local)" : "Song";
+
     return (
         <div className="table-wrap">
             <table>
                 <thead>
                     <tr>
-                        <th>genre</th>
-                        <th>artist</th>
-                        <th>song name</th>
-                        <th></th>
+                        <th scope="col">Genre</th>
+                        <th scope="col">{artistHeader}</th>
+                        <th scope="col">{songHeader}</th>
+                        <th scope="col" />
                     </tr>
                 </thead>
                 <tbody>
-                    {!loading && rows.length === 0 ? (
+                    {loading && rows.length === 0 ? (
+                        Array.from({ length: SKELETON_ROWS }, (_, i) => (
+                            <SkeletonRow key={i} />
+                        ))
+                    ) : rows.length === 0 ? (
                         <tr>
                             <td colSpan={4} className="muted center">
                                 No songs found.
                             </td>
                         </tr>
-                    ) : null}
-
-                    {rows.map((song) => (
-                        <tr key={song.song_id}>
-                            <td>{song.genre ?? <span className="muted">-</span>}</td>
-                            <td>{song.artist_local ?? <span className="muted">-</span>}</td>
-                            <td>{song.song_name_local ?? <span className="muted">-</span>}</td>
-                            <td className="col-play">
-                                {mode === "playable" ? (
-                                    <button
-                                        className="button row-action-button"
-                                        type="button"
-                                        onClick={() => onPlaySong(song.song_id)}
-                                    >
-                                        Play
-                                    </button>
-                                ) : (
-                                    <span>{getMissingStatus(song)}</span>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
+                    ) : (
+                        rows.map((song) => (
+                            <tr key={song.song_id}>
+                                <td>{song.genre ?? <span className="muted">-</span>}</td>
+                                <td>
+                                    {showLocal
+                                        ? (song.artist_local ?? <span className="muted">-</span>)
+                                        : (song.artist_en ?? <span className="muted">-</span>)}
+                                </td>
+                                <td>
+                                    {showLocal
+                                        ? (song.song_name_local ?? <span className="muted">-</span>)
+                                        : (song.song_name_en ?? <span className="muted">-</span>)}
+                                </td>
+                                <td className="col-play">
+                                    {mode === "playable" ? (
+                                        <a
+                                            className="button row-action-button"
+                                            href={`/songs/${song.song_id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            Play
+                                        </a>
+                                    ) : (
+                                        <span>{getMissingStatus(song)}</span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
+            {loading && rows.length > 0 ? (
+                <div className="loading-overlay" aria-label="Updating results" />
+            ) : null}
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useState } from "react";
 
 import {
   fetchRandomPlayableSong,
@@ -19,7 +19,8 @@ function App() {
   const [mode, setMode] = useState<SongViewMode>("playable");
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
-  const [searchText, setSearchText] = useState("");
+  const deferredSearch = useDeferredValue(searchInput.trim());
+  const [showLocal, setShowLocal] = useState(true);
   const [refreshToken, setRefreshToken] = useState(0);
   const [randomLoading, setRandomLoading] = useState(false);
   const [randomError, setRandomError] = useState<string | null>(null);
@@ -30,7 +31,7 @@ function App() {
 
   const { rows, totalSongs, loading, error } = useSongsData({
     mode,
-    searchText,
+    searchText: deferredSearch,
     page,
     pageSize: PAGE_SIZE,
     refreshToken,
@@ -41,7 +42,7 @@ function App() {
     setRefreshToken((value) => value + 1);
   }, []);
 
-  const { syncMessage, onSyncLocalSongs } = useSyncStatus({
+  const { syncMessage, isSyncing, onSyncLocalSongs } = useSyncStatus({
     onSyncFinished: handleSyncFinished,
   });
 
@@ -74,14 +75,8 @@ function App() {
     return items;
   }, [page, totalPages]);
 
-  function onSearch() {
-    setPage(1);
-    setSearchText(searchInput.trim());
-  }
-
   function onResetSearch() {
     setSearchInput("");
-    setSearchText("");
     setPage(1);
   }
 
@@ -96,7 +91,7 @@ function App() {
 
     setRandomLoading(true);
     try {
-      const randomSong = await fetchRandomPlayableSong(searchText);
+      const randomSong = await fetchRandomPlayableSong(searchInput);
       newTab.location.href = `/songs/${randomSong.song_id}`;
     } catch (randomError_) {
       newTab.close();
@@ -108,7 +103,7 @@ function App() {
     } finally {
       setRandomLoading(false);
     }
-  }, [searchText]);
+  }, [searchInput]);
 
   function onOpenUnplayableSongs() {
     setMode("unplayable");
@@ -125,8 +120,13 @@ function App() {
       <header className="topbar">
         <h1 className="title">Drum Sheet Manager</h1>
         <div className="button-row">
-          <button className="button" type="button" onClick={onSyncLocalSongs}>
-            Sync Local Songs
+          <button
+            className="button"
+            type="button"
+            onClick={onSyncLocalSongs}
+            disabled={isSyncing}
+          >
+            {isSyncing ? "Syncing..." : "Sync Local Songs"}
           </button>
           <button
             className={`button ${mode === "unplayable" ? "active" : ""}`}
@@ -141,11 +141,20 @@ function App() {
       <section className="panel">
         <div className="panel-header">
           <h2>{mode === "playable" ? "Playable Songs" : "Unplayable Songs"}</h2>
-          {mode === "unplayable" ? (
-            <button className="button subtle" type="button" onClick={onOpenPlayableSongs}>
-              Back To Playable Songs
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {mode === "unplayable" ? (
+              <button className="button subtle" type="button" onClick={onOpenPlayableSongs}>
+                Back To Playable Songs
+              </button>
+            ) : null}
+            <button
+              className="button subtle"
+              type="button"
+              onClick={() => setShowLocal((v) => !v)}
+            >
+              {showLocal ? "Show English" : "Show Local"}
             </button>
-          ) : null}
+          </div>
         </div>
 
         <SyncStatus message={syncMessage} />
@@ -153,7 +162,6 @@ function App() {
         <SearchBar
           searchInput={searchInput}
           onSearchInputChange={setSearchInput}
-          onSearch={onSearch}
           onReset={onResetSearch}
           onRandom={mode === "playable" ? onRandomSong : undefined}
           randomDisabled={randomLoading}
@@ -166,7 +174,7 @@ function App() {
           rows={rows}
           loading={loading}
           mode={mode}
-          onPlaySong={(songId) => window.open(`/songs/${songId}`, "_blank")}
+          showLocal={showLocal}
         />
 
         <Pagination

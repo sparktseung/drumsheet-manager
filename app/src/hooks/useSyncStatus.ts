@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     getCurrentSyncJob,
@@ -13,6 +13,7 @@ type UseSyncStatusArgs = {
 
 type UseSyncStatusResult = {
     syncMessage: string;
+    isSyncing: boolean;
     onSyncLocalSongs: () => Promise<void>;
 };
 
@@ -32,6 +33,8 @@ export function useSyncStatus({
 }: UseSyncStatusArgs): UseSyncStatusResult {
     const [syncMessage, setSyncMessage] = useState<string>("");
     const [syncJobId, setSyncJobId] = useState<string | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         void getCurrentSyncJob()
@@ -50,29 +53,25 @@ export function useSyncStatus({
         if (!syncJobId) {
             return;
         }
-        const activeJobId = syncJobId;
 
         let cancelled = false;
 
-        async function pollSyncStatus() {
+        async function poll() {
             try {
-                const job = await getSyncJobStatus(activeJobId);
-                if (cancelled) {
-                    return;
-                }
+                const job = await getSyncJobStatus(syncJobId);
+                if (cancelled) return;
 
                 setSyncMessage(formatSync(job));
 
                 if (job.status === "queued" || job.status === "running") {
-                    return;
+                    timeoutRef.current = setTimeout(poll, 2000);
+                } else {
+                    setSyncJobId(null);
+                    setIsSyncing(false);
+                    onSyncFinished();
                 }
-
-                setSyncJobId(null);
-                onSyncFinished();
             } catch (pollError) {
-                if (cancelled) {
-                    return;
-                }
+                if (cancelled) return;
 
                 setSyncMessage(
                     pollError instanceof Error
@@ -80,17 +79,18 @@ export function useSyncStatus({
                         : "Unable to read sync job state",
                 );
                 setSyncJobId(null);
+                setIsSyncing(false);
             }
         }
 
-        void pollSyncStatus();
-        const intervalId = window.setInterval(() => {
-            void pollSyncStatus();
-        }, 2000);
+        poll();
 
         return () => {
             cancelled = true;
-            window.clearInterval(intervalId);
+            if (timeoutRef.current !== null) {
+                clearTimeout(timeoutRef.current);
+                timeoutRef.current = null;
+            }
         };
     }, [syncJobId, onSyncFinished]);
 
@@ -99,6 +99,7 @@ export function useSyncStatus({
             const job = await startSyncJob();
             setSyncMessage(formatSync(job));
             setSyncJobId(job.job_id);
+            setIsSyncing(true);
         } catch (syncError) {
             setSyncMessage(
                 syncError instanceof Error
@@ -110,6 +111,7 @@ export function useSyncStatus({
 
     return {
         syncMessage,
+        isSyncing,
         onSyncLocalSongs,
     };
 }
