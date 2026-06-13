@@ -57,7 +57,8 @@ class AppViewManager:
     def create_vw_all_songs(self) -> None:
         """Create vw_all_songs by full-joining song tables on song_id."""
         stmt = sa.text(f"""
-            CREATE OR REPLACE VIEW {self.schema}.{VW_ALL_SONGS} AS
+            DROP VIEW IF EXISTS {self.schema}.{VW_ALL_SONGS} CASCADE;
+            CREATE VIEW {self.schema}.{VW_ALL_SONGS} AS
             SELECT
                 COALESCE(
                     m.song_id,
@@ -105,7 +106,8 @@ class AppViewManager:
         A playable song must have both an audio file and a drum sheet.
         """
         stmt = sa.text(f"""
-            CREATE OR REPLACE VIEW {self.schema}.{VW_PLAYABLE_SONGS} AS
+            DROP VIEW IF EXISTS {self.schema}.{VW_PLAYABLE_SONGS} CASCADE;
+            CREATE VIEW {self.schema}.{VW_PLAYABLE_SONGS} AS
             SELECT
                 p.song_id,
                 p.in_master,
@@ -144,7 +146,8 @@ class AppViewManager:
         Includes songs in master that are missing either audio or drum sheet.
         """
         stmt = sa.text(f"""
-            CREATE OR REPLACE VIEW {self.schema}.{VW_UNPLAYABLE_SONGS} AS
+            DROP VIEW IF EXISTS {self.schema}.{VW_UNPLAYABLE_SONGS} CASCADE;
+            CREATE VIEW {self.schema}.{VW_UNPLAYABLE_SONGS} AS
             SELECT *
             FROM {self.schema}.{VW_ALL_SONGS}
             WHERE in_master IS TRUE
@@ -160,7 +163,8 @@ class AppViewManager:
     def create_vw_recently_updated_songs(self) -> None:
         """Create vw_recently_updated_songs from vw_all_songs."""
         stmt = sa.text(f"""
-            CREATE OR REPLACE VIEW {self.schema}.{VW_RECENTLY_UPDATED_SONGS} AS
+            DROP VIEW IF EXISTS {self.schema}.{VW_RECENTLY_UPDATED_SONGS} CASCADE;
+            CREATE VIEW {self.schema}.{VW_RECENTLY_UPDATED_SONGS} AS
             SELECT *
             FROM {self.schema}.{VW_ALL_SONGS}
             WHERE updated_at IS NOT NULL
