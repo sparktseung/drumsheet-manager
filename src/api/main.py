@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import get_settings
 from .dependencies import close_engine
 from .routes.admin import router as admin_router
+from .routes.discovery import router as discovery_router
 from .routes.files import router as files_router
 from .routes.health import router as health_router
 from .routes.songs import router as songs_router
@@ -37,3 +38,4 @@ app.include_router(health_router)
 app.include_router(songs_router)
 app.include_router(files_router)
 app.include_router(admin_router)
+app.include_router(discovery_router)
