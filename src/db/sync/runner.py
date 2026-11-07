@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import json
-import subprocess
-
 import sqlalchemy as sa
 import polars as pl
 from sqlalchemy.engine import Engine
@@ -21,8 +18,7 @@ from src.db.postgres import (
 )
 from src.db.song_master.constants import SONG_MASTER_LIST_UUID
 from src.db.song_master.manager import SongMasterManager
-
-LOUDNESS_TARGET = -16  # Target integrated loudness in LUFS
+from src.db.sync.loudness import LOUDNESS_ALGO_VERSION, analyze_loudness
 
 
 def _filter_child_rows_by_master_ids(
@@ -42,40 +38,10 @@ def _filter_child_rows_by_master_ids(
     return df_child.filter(pl.col("song_id").is_in(list(master_song_ids)))
 
 
-def _analyze_loudness(file_path: str) -> float | None:
-    """Run FFmpeg loudnorm analysis on an audio file.
-
-    Returns the target_offset (dB) needed to reach LOUDNESS_TARGET,
-    or None if analysis fails.
-    """
-    cmd = [
-        "ffmpeg",
-        "-i", file_path,
-        "-af", f"loudnorm=I={LOUDNESS_TARGET}:print_format=json",
-        "-f", "null",
-        "-",
-    ]
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        stderr = result.stderr
-        json_start = stderr.find("{")
-        json_end = stderr.rfind("}") + 1
-        if json_start >= 0 and json_end > json_start:
-            data = json.loads(stderr[json_start:json_end])
-            return float(data["target_offset"])
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, ValueError, OSError):
-        pass
-    return None
-
-
 def _load_existing_gains(engine: Engine, schema: str) -> dict[str, dict]:
     stmt = sa.text(
-        f"SELECT song_id, file_path_hash, last_modified_ts, loudness_gain_db"
+        f"SELECT song_id, file_path_hash, last_modified_ts,"
+        f" loudness_gain_db, loudness_algo_version"
         f" FROM {schema}.song_audio"
     )
     with engine.connect() as conn:
@@ -85,6 +51,7 @@ def _load_existing_gains(engine: Engine, schema: str) -> dict[str, dict]:
             "file_path_hash": row["file_path_hash"],
             "last_modified_ts": row["last_modified_ts"],
             "loudness_gain_db": row["loudness_gain_db"],
+            "loudness_algo_version": row["loudness_algo_version"],
         }
         for row in rows
     }
@@ -95,10 +62,14 @@ def _add_loudness_gain_column(
     schema: str,
     df_song_audio: pl.DataFrame,
 ) -> pl.DataFrame:
-    """Add loudness_gain_db column to df_song_audio.
+    """Add loudness gain columns to df_song_audio.
 
-    New or changed files are analyzed via FFmpeg loudnorm; existing
-    unchanged files keep their cached gain value from the database.
+    New, changed, or stale-algorithm files are analyzed via FFmpeg
+    loudnorm; existing up-to-date files keep their cached gain from the
+    database. A cached gain is reused only when the file is unchanged
+    (path hash + mtime) AND it was computed with the current
+    LOUDNESS_ALGO_VERSION, so algorithm changes invalidate stale values
+    automatically.
     """
     if df_song_audio.is_empty():
         return df_song_audio
@@ -113,14 +84,19 @@ def _add_loudness_gain_column(
             cached is not None
             and cached["file_path_hash"] == row["file_path_hash"]
             and cached["last_modified_ts"] == row.get("last_modified_ts")
+            and cached["loudness_algo_version"] == LOUDNESS_ALGO_VERSION
         ):
             gains.append(cached["loudness_gain_db"])
         else:
-            gain = _analyze_loudness(row["file_path"])
-            gains.append(gain)
+            gains.append(analyze_loudness(row["file_path"]))
 
     return df_song_audio.with_columns(
         pl.Series("loudness_gain_db", gains, dtype=pl.Float32),
+        pl.Series(
+            "loudness_algo_version",
+            [LOUDNESS_ALGO_VERSION] * df_song_audio.height,
+            dtype=pl.Int32,
+        ),
     )
 
 
@@ -143,6 +119,16 @@ def create_tables_if_not_exist(
         build_song_drum_sheet_table(metadata, schema)
         build_song_source_table(metadata, schema)
         metadata.create_all(db_engine)
+
+        # Idempotent column migrations for pre-existing tables.
+        with db_engine.begin() as conn:
+            conn.execute(
+                sa.text(
+                    f"ALTER TABLE {schema}.song_audio"
+                    f" ADD COLUMN IF NOT EXISTS"
+                    f" loudness_algo_version INTEGER"
+                )
+            )
     finally:
         if created_engine:
             db_engine.dispose()
