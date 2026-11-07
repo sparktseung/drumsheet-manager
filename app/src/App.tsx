@@ -6,6 +6,7 @@ import {
 } from "./api/client";
 import Pagination from "./components/Pagination.tsx";
 import SearchBar from "./components/SearchBar.tsx";
+import SongDiscovery from "./components/SongDiscovery.tsx";
 import SongTable from "./components/SongTable.tsx";
 import SyncStatus from "./components/SyncStatus.tsx";
 import { useSongsData } from "./hooks/useSongsData.ts";
@@ -180,6 +181,8 @@ function App() {
           onSetPage={setPage}
         />
       </section>
+
+      <SongDiscovery />
     </main>
   );
 }

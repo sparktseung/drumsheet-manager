@@ -8,6 +8,10 @@ export const API_BASE_URL =
 export type SongRow = components["schemas"]["SongRow"];
 export type SongCount = components["schemas"]["SongCount"];
 export type SyncJob = components["schemas"]["SyncJob"];
+export type StagingFile = components["schemas"]["StagingFile"];
+export type DiscoveryInsertRequest = components["schemas"]["DiscoveryInsertRequest"];
+export type DiscoveryInsertResponse = components["schemas"]["DiscoveryInsertResponse"];
+export type DiscoveryValidationResult = components["schemas"]["DiscoveryValidationResult"];
 
 export type SongViewMode = "playable" | "unplayable";
 
@@ -107,4 +111,32 @@ export async function getCurrentSyncJob(): Promise<SyncJob | null> {
 
 export async function getSyncJobStatus(jobId: string): Promise<SyncJob> {
     return requestJson<SyncJob>(buildUrl(`/admin/sync/${jobId}`));
+}
+
+export async function fetchStagingFiles(): Promise<StagingFile[]> {
+    return requestJson<StagingFile[]>(buildUrl("/admin/discovery/files"));
+}
+
+export async function insertDiscoveredSong(
+    body: DiscoveryInsertRequest,
+): Promise<DiscoveryInsertResponse> {
+    return requestJson<DiscoveryInsertResponse>(
+        buildUrl("/admin/discovery/insert"),
+        {
+            method: "POST",
+            body: JSON.stringify(body),
+        },
+    );
+}
+
+export async function validateDiscovery(
+    body: DiscoveryInsertRequest,
+): Promise<DiscoveryValidationResult> {
+    return requestJson<DiscoveryValidationResult>(
+        buildUrl("/admin/discovery/validate"),
+        {
+            method: "POST",
+            body: JSON.stringify(body),
+        },
+    );
 }

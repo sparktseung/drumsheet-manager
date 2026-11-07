@@ -1078,10 +1078,276 @@
           }
         }
       }
+    },
+    "/admin/discovery/files": {
+      "get": {
+        "tags": [
+          "discovery"
+        ],
+        "summary": "List staging files",
+        "description": "List all valid song files in the staging folder.",
+        "operationId": "list_staging_files_admin_discovery_files_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StagingFile"
+                  },
+                  "type": "array",
+                  "title": "Response List Staging Files Admin Discovery Files Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/discovery/validate": {
+      "post": {
+        "tags": [
+          "discovery"
+        ],
+        "summary": "Validate a pending song insertion",
+        "description": "Run all validation checks and return errors and warnings. Warnings (e.g. duplicate in master) do not block insertion.",
+        "operationId": "validate_discovery_admin_discovery_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoveryInsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryValidationResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/discovery/insert": {
+      "post": {
+        "tags": [
+          "discovery"
+        ],
+        "summary": "Insert a discovered song",
+        "description": "Validate, insert into master spreadsheet, rename files, and move them to the song data folder.",
+        "operationId": "insert_discovered_song_admin_discovery_insert_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoveryInsertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryInsertResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "DiscoveryInsertRequest": {
+        "properties": {
+          "artist_en": {
+            "type": "string",
+            "title": "Artist En"
+          },
+          "song_name_en": {
+            "type": "string",
+            "title": "Song Name En"
+          },
+          "genre": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genre"
+          },
+          "artist_local": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artist Local"
+          },
+          "song_name_local": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Song Name Local"
+          },
+          "audio_file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio File Path"
+          },
+          "drum_sheet_file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Drum Sheet File Path"
+          },
+          "source_file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source File Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artist_en",
+          "song_name_en"
+        ],
+        "title": "DiscoveryInsertRequest"
+      },
+      "DiscoveryInsertResponse": {
+        "properties": {
+          "artist_en": {
+            "type": "string",
+            "title": "Artist En"
+          },
+          "song_name_en": {
+            "type": "string",
+            "title": "Song Name En"
+          },
+          "renamed_files": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Renamed Files"
+          },
+          "moved_files": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Moved Files"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "artist_en",
+          "song_name_en",
+          "renamed_files",
+          "moved_files",
+          "warnings"
+        ],
+        "title": "DiscoveryInsertResponse"
+      },
+      "DiscoveryValidationResult": {
+        "properties": {
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Errors"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "errors",
+          "warnings"
+        ],
+        "title": "DiscoveryValidationResult"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1252,6 +1518,34 @@
           "source_available"
         ],
         "title": "SongRow"
+      },
+      "StagingFile": {
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "title": "File Path"
+          },
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          },
+          "extension": {
+            "type": "string",
+            "title": "Extension"
+          },
+          "file_type": {
+            "type": "string",
+            "title": "File Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_path",
+          "file_name",
+          "extension",
+          "file_type"
+        ],
+        "title": "StagingFile"
       },
       "SyncJob": {
         "properties": {

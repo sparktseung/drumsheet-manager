@@ -456,6 +456,213 @@ tbody tr:hover td {
   }
 }
 
+/* ── Song Discovery ── */
+
+.discovery-panel {
+  margin-top: 2rem;
+}
+
+.discovery-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.discovery-files-section {
+  min-width: 0;
+}
+
+.discovery-metadata-section {
+  min-width: 0;
+}
+
+.discovery-file-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-top: 0.6rem;
+}
+
+.discovery-file-column h4 {
+  margin: 0 0 0.4rem;
+}
+
+.discovery-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.discovery-file-list li {
+  border-bottom: 1px solid #efe3d0;
+}
+
+.discovery-file-list li:last-child {
+  border-bottom: none;
+}
+
+.discovery-file-list li label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  cursor: pointer;
+}
+
+.discovery-file-list li.selected {
+  background: #d4e8df;
+}
+
+.discovery-file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.discovery-metadata-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.discovery-metadata-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.discovery-preview {
+  margin-top: 1rem;
+  padding: 0.7rem;
+  background: #f0f7f3;
+  border: 1px solid #c4d9ce;
+  border-radius: 8px;
+}
+
+.discovery-preview h4 {
+  margin: 0 0 0.4rem;
+}
+
+.discovery-preview ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.9rem;
+}
+
+.discovery-actions {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.discovery-result {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: #d4e8df;
+  border-radius: 8px;
+}
+
+.discovery-result p {
+  margin: 0;
+}
+
+.discovery-validation-errors {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: #fde8e8;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+}
+
+.discovery-validation-errors h4 {
+  margin: 0 0 0.4rem;
+  color: var(--danger);
+}
+
+.discovery-validation-errors ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.discovery-validation-errors li {
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.discovery-validation-warnings {
+  margin-top: 1rem;
+  padding: 0.8rem;
+  background: #fef3cd;
+  border: 1px solid #d4a853;
+  border-radius: 8px;
+}
+
+.discovery-validation-warnings h4 {
+  margin: 0 0 0.4rem;
+  color: #856404;
+}
+
+.discovery-validation-warnings ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.discovery-validation-warnings li {
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.discovery-validation-warnings p {
+  margin: 0.5rem 0 0.3rem;
+}
+
+.discovery-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.discovery-dialog {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.5rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.discovery-dialog p {
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.discovery-dialog-buttons {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+  .discovery-file-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 760px) {
   .topbar {
     flex-direction: column;

@@ -315,10 +315,113 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/discovery/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List staging files
+         * @description List all valid song files in the staging folder.
+         */
+        get: operations["list_staging_files_admin_discovery_files_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/discovery/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate a pending song insertion
+         * @description Run all validation checks and return errors and warnings. Warnings (e.g. duplicate in master) do not block insertion.
+         */
+        post: operations["validate_discovery_admin_discovery_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/discovery/insert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Insert a discovered song
+         * @description Validate, insert into master spreadsheet, rename files, and move them to the song data folder.
+         */
+        post: operations["insert_discovered_song_admin_discovery_insert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** DiscoveryInsertRequest */
+        DiscoveryInsertRequest: {
+            /** Artist En */
+            artist_en: string;
+            /** Song Name En */
+            song_name_en: string;
+            /** Genre */
+            genre?: string | null;
+            /** Artist Local */
+            artist_local?: string | null;
+            /** Song Name Local */
+            song_name_local?: string | null;
+            /** Audio File Path */
+            audio_file_path?: string | null;
+            /** Drum Sheet File Path */
+            drum_sheet_file_path?: string | null;
+            /** Source File Path */
+            source_file_path?: string | null;
+        };
+        /** DiscoveryInsertResponse */
+        DiscoveryInsertResponse: {
+            /** Artist En */
+            artist_en: string;
+            /** Song Name En */
+            song_name_en: string;
+            /** Renamed Files */
+            renamed_files: {
+                [key: string]: string;
+            }[];
+            /** Moved Files */
+            moved_files: {
+                [key: string]: string;
+            }[];
+            /** Warnings */
+            warnings: string[];
+        };
+        /** DiscoveryValidationResult */
+        DiscoveryValidationResult: {
+            /** Errors */
+            errors: string[];
+            /** Warnings */
+            warnings: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -364,6 +467,17 @@ export interface components {
             source_available: boolean;
             /** Source File Path */
             source_file_path?: string | null;
+        };
+        /** StagingFile */
+        StagingFile: {
+            /** File Path */
+            file_path: string;
+            /** File Name */
+            file_name: string;
+            /** Extension */
+            extension: string;
+            /** File Type */
+            file_type: string;
         };
         /** SyncJob */
         SyncJob: {
@@ -905,6 +1019,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_staging_files_admin_discovery_files_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StagingFile"][];
+                };
+            };
+        };
+    };
+    validate_discovery_admin_discovery_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryInsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryValidationResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    insert_discovered_song_admin_discovery_insert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscoveryInsertRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscoveryInsertResponse"];
                 };
             };
             /** @description Validation Error */
