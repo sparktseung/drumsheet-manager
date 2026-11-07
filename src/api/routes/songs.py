@@ -261,6 +261,12 @@ def get_random_playable_song(
     ),
     conn: Connection = Depends(get_db_connection),
 ) -> SongRow:
+    # Reseed PostgreSQL's PRNG with the current time so that
+    # RANDOM() produces a different ordering on every request,
+    # even when the same pooled connection is reused.
+    conn.execute(
+        sa.text("SELECT SETSEED(EXTRACT(EPOCH FROM CLOCK_TIMESTAMP()))")
+    )
     table = _get_view(conn, VW_PLAYABLE_SONGS)
     filters = _build_base_filters(table=table, q=q)
     stmt = (
