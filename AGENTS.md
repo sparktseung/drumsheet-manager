@@ -8,6 +8,12 @@
 > Start at the package level, then drill down to the specific module you
 > need to work on.
 
+## Documentation guidelines
+
+- **Succinct**: Keep docs brief and to the point. Describe what exists and how it works — not how it got there.
+- **Current state only**: Documentation reflects the repo as it is right now. History lives in git; avoid narrating past changes or evolution unless the user explicitly asks for it.
+- **Nearest reasonable level**: Place documentation at the closest AGENTS.md to the code it describes. Don't duplicate information that belongs at a higher or lower level.
+
 ## Stack
 - **Backend**: Python 3.11+ with FastAPI, SQLAlchemy, Polars, uv
 - **Frontend**: React 19, TypeScript 5.9, Vite 8, react-router-dom, react-pdf
