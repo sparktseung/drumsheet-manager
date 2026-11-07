@@ -1,5 +1,13 @@
 # Drumsheet Manager — Agent Guide
 
+> **Hierarchical AGENTS.md**: Navigate through layered documentation:
+> - [src/AGENTS.md](src/AGENTS.md) — backend package (Python/FastAPI)
+> - [app/AGENTS.md](app/AGENTS.md) — frontend package (React/TypeScript)
+>
+> Each file links to deeper AGENTS.md files within its subdirectories.
+> Start at the package level, then drill down to the specific module you
+> need to work on.
+
 ## Stack
 - **Backend**: Python 3.11+ with FastAPI, SQLAlchemy, Polars, uv
 - **Frontend**: React 19, TypeScript 5.9, Vite 8, react-router-dom, react-pdf

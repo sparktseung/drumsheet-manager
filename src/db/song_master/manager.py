@@ -1,17 +1,15 @@
 """
-A SongMasterManager class that looks at and summarizes local raw data.
 Compiles a list of available local song data files and compares against an
 existing postgres database for syncing.
 
-- Loads a master spreadsheet that contains a list of songs and their metadata.
+- Loads a master spreadsheet (CSV or Excel) with song metadata.
     - Primary keys: artist_en, song_name_en
-    - A uuid is generated for each row using a set seed uuid, based on the two
-      primary keys.
-- Lists all available song data files in a given folder, and extracts the
+    - A deterministic UUID is generated for each row using a seed UUID.
+- Lists all available song data files in a given folder, extracting
   artist and song name from the file name.
     - Naming convention: {anything} - {artist_en} - {song_name_en}.{extension}
-    - Each song must have at least a .mp3 and a .pdf file to be valid
-    - Optional MuseScore source file .mscz can also be included
+    - Each song must have at least a .mp3 and a .pdf file to be valid.
+    - Optional MuseScore source file .mscz can also be included.
 """
 
 import hashlib
@@ -41,18 +39,12 @@ class SongMasterManager:
         Params
         ------
         master_file: str | Path
-            The path to the CSV or Excel file containing the song master list.
-            At a minimum, the csv should have these columns:
-                - artist_en (string): The name of the artist in English.
-                - song_name_en (string): The name of the song in English.
-            Other columns will also be loaded as metadata.
+            Path to the CSV or Excel file containing the song master list.
+            Required columns: artist_en, song_name_en.
         song_data_folder: str | Path
-            The path to the folder where song data (e.g. drum sheet metadata)
-            will be stored.
+            Path to the folder containing song data files.
         uuid_seed: str | uuid.UUID
-            A seed uuid to use for generating uuids for each row.
-            This should be a fixed uuid to ensure that the same song will
-            always have the same uuid across different runs of the function.
+            Seed UUID for deterministic song_id generation.
         """
 
         self.master_file = master_file

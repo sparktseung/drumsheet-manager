@@ -1,9 +1,7 @@
 """Shared loudness analysis for song audio.
 
 Single source of truth for the playback-gain calculation used by both the
-sync runner and the backfill script. Keeping it here prevents the two
-callers from drifting apart (which previously let a wrong formula persist
-in one of them).
+sync runner and the backfill script.
 """
 
 from __future__ import annotations
@@ -14,9 +12,12 @@ import subprocess
 LOUDNESS_TARGET = -16  # Target integrated loudness in LUFS
 TRUE_PEAK_CEILING = -1.0  # Max true peak (dBTP) after gain, to avoid clipping
 
-# Bump this whenever the gain algorithm changes. The sync runner keys its
-# cached gain on this version so stale values are recomputed automatically
-# instead of silently persisting.
+# Bump this (+1) whenever the gain algorithm changes, so cached gains are
+# recomputed instead of silently persisting. Bump if you change ANY of:
+#   - LOUDNESS_TARGET or TRUE_PEAK_CEILING
+#   - the formula in compute_gain_db()
+#   - which loudnorm fields analyze_loudness() reads (input_i / input_tp)
+# Do NOT bump for refactors that leave the computed value unchanged.
 LOUDNESS_ALGO_VERSION = 2
 
 

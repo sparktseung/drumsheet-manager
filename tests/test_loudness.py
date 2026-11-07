@@ -1,9 +1,4 @@
-"""Unit tests for the shared loudness gain calculation.
-
-These tests pin the gain formula so the ``target_offset`` regression
-(storing loudnorm's near-zero residual instead of the real gain) cannot
-return unnoticed.
-"""
+"""Unit tests for the shared loudness gain calculation."""
 
 from __future__ import annotations
 
