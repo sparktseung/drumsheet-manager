@@ -39,3 +39,40 @@ Pydantic model for a song row from the database views.
 | `started_at` | `datetime \| None` | When the job started running |
 | `finished_at` | `datetime \| None` | When the job completed |
 | `error` | `str \| None` | Error message if status is "failed" |
+
+### Discovery — [discovery.py](discovery.py)
+
+**StagingFile**
+| Field | Type | Description |
+|-------|------|-------------|
+| `file_path` | `str` | Absolute path to the file |
+| `file_name` | `str` | File name only |
+| `extension` | `str` | File extension (e.g. `.mp3`) |
+| `file_type` | `str` | `"audio"`, `"drum_sheet"`, or `"source"` |
+
+**DiscoveryInsertRequest**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `artist_en` | `str` | Yes | Artist name in English |
+| `song_name_en` | `str` | Yes | Song name in English |
+| `genre` | `str \| None` | No | Genre |
+| `artist_local` | `str \| None` | No | Artist name in local language |
+| `song_name_local` | `str \| None` | No | Song name in local language |
+| `audio_file_path` | `str \| None` | No | Path to audio file in staging |
+| `drum_sheet_file_path` | `str \| None` | No | Path to drum sheet in staging |
+| `source_file_path` | `str \| None` | No | Path to source file in staging |
+
+**DiscoveryValidationResult**
+| Field | Type | Description |
+|-------|------|-------------|
+| `errors` | `list[str]` | Blocking validation errors |
+| `warnings` | `list[str]` | Non-blocking warnings (e.g. duplicate in master) |
+
+**DiscoveryInsertResponse**
+| Field | Type | Description |
+|-------|------|-------------|
+| `artist_en` | `str` | Artist name in English |
+| `song_name_en` | `str` | Song name in English |
+| `renamed_files` | `list[dict]` | Files renamed in staging |
+| `moved_files` | `list[dict]` | Files moved to data folder |
+| `warnings` | `list[str]` | Non-blocking warnings |

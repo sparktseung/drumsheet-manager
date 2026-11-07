@@ -61,3 +61,4 @@ npm run lint         # eslint
 - Child rows (audio, drum sheets, sources) are filtered to only reference master `song_id`s during sync — avoids FK violations from unmatched filenames.
 - File naming convention: `(qualifier) - artist_en - song_name_en.{mp3,pdf,mscz}`. The qualifier prefix is ignored.
 - TypeScript uses `verbatimModuleSyntax`, `noUnusedLocals`, `noUnusedParameters` — strict imports and no unused vars.
+

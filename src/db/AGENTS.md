@@ -16,7 +16,7 @@ db/
 │   └── song_source.py
 ├── song_master/    # SongMasterManager (spreadsheet + file scan)
 │   ├── manager.py      # Loads master CSV/XLSX, scans song_data_folder
-│   └── constants.py    # SONG_MASTER_LIST_UUID seed
+│   └── constants.py    # SONG_MASTER_LIST_UUID seed, file extension sets
 └── sync/           # Sync orchestration
     ├── runner.py       # run_sync_once, create_tables_if_not_exist
     ├── loudness.py     # FFmpeg loudnorm analysis, compute_gain_db

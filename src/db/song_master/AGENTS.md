@@ -7,7 +7,7 @@
 | File | Description |
 |------|-------------|
 | [manager.py](manager.py) | `SongMasterManager` — loads master spreadsheet, scans song data folder |
-| [constants.py](constants.py) | `SONG_MASTER_LIST_UUID` — seed UUID for deterministic song_id generation |
+| [constants.py](constants.py) | `SONG_MASTER_LIST_UUID` — seed UUID for deterministic song_id generation; `AUDIO_EXTENSIONS`, `DRUM_SHEET_EXTENSIONS`, `SOURCE_EXTENSIONS`, `VALID_EXTENSIONS` — file extension sets |
 
 ## `SongMasterManager` — [manager.py](manager.py)
 
