@@ -17,17 +17,16 @@ import polars as pl
 from pathlib import Path
 import uuid
 
+from .constants import (
+    AUDIO_EXTENSIONS,
+    DRUM_SHEET_EXTENSIONS,
+    SOURCE_EXTENSIONS,
+    VALID_EXTENSIONS,
+)
+
 
 class SongMasterManager:
     REQUIRED_COLUMNS = {"artist_en", "song_name_en"}
-    VALID_DRUM_SHEET_EXTENSIONS = {".pdf"}
-    VALID_AUDIO_EXTENSIONS = {".mp3", ".wav"}
-    VALID_SOURCE_EXTENSIONS = {".mscz"}
-    VALID_EXTENTIONS = (
-        VALID_AUDIO_EXTENSIONS
-        | VALID_DRUM_SHEET_EXTENSIONS
-        | VALID_SOURCE_EXTENSIONS
-    )
 
     def __init__(
         self,
@@ -133,7 +132,7 @@ class SongMasterManager:
                     str(file_path)
                     for file_path in song_data_root.rglob("*")
                     if file_path.is_file()
-                    and file_path.suffix in self.VALID_EXTENTIONS
+                    and file_path.suffix in VALID_EXTENSIONS
                 ],
             }
         )
@@ -179,13 +178,13 @@ class SongMasterManager:
             .map_elements(
                 lambda ext: (
                     "audio"
-                    if ext in self.VALID_AUDIO_EXTENSIONS
+                    if ext in AUDIO_EXTENSIONS
                     else (
                         "drum_sheet"
-                        if ext in self.VALID_DRUM_SHEET_EXTENSIONS
+                        if ext in DRUM_SHEET_EXTENSIONS
                         else (
                             "source"
-                            if ext in self.VALID_SOURCE_EXTENSIONS
+                            if ext in SOURCE_EXTENSIONS
                             else "unknown"
                         )
                     )
