@@ -65,4 +65,4 @@
 - `_build_base_filters()` constructs WHERE clauses from query params.
 - `_fetch_rows()` / `_fetch_count()` are shared helpers for building paginated queries.
 - File endpoints look up `file_path` from `vw_all_songs`, then validate the file exists on disk before returning a `FileResponse`.
-- **PRNG reseeding**: `GET /songs/playable/random` calls `SETSEED(EXTRACT(EPOCH FROM CLOCK_TIMESTAMP()))` before `ORDER BY RANDOM()` to avoid deterministic ordering from pooled connection reuse.
+- **PRNG reseeding**: `GET /songs/playable/random` calls `SETSEED(MOD(EXTRACT(EPOCH FROM CLOCK_TIMESTAMP()), 1))` before `ORDER BY RANDOM()` to avoid deterministic ordering from pooled connection reuse. The fractional part of the epoch is used because `SETSEED` only accepts values in `[-1, 1]`.
