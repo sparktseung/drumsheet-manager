@@ -35,31 +35,31 @@ music = \drummode {
 
   \textMark \markup "Money Beat with Repeats"
   \repeat volta 2 {
-    <bd cymc>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  |
-    \repeat percent 2 { <bd hh>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  }
-    <bd hh>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  |
+    \moneyBeat cymc8 hh8 |
+    \repeat percent 2 { \moneyBeat hh8 hh8 }
+    \moneyBeat hh8 hh8 |
   }
   <bd cymc>4 r2. |
   \break
 
   \textMark \markup "Money Beat with Different Endings"
   \repeat volta 2 {
-    <bd cymc>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  |
-    \repeat percent 2 { <bd hh>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  }
+    \moneyBeat cymc8 hh8 |
+    \repeat percent 2 { \moneyBeat hh8 hh8 }
   }
   \alternative {
-    { <bd hh>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8 | }
+    { \moneyBeat hh8 hh8 | }
     { <bd cymc>4 r2. | }
   }
   \break
 
   \textMark \markup "Money Beat with 4 repeats (1,3 same / 2,4 same)"
   \repeat volta 4 {
-    <bd cymc>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  |
-    \repeat percent 2 { <bd hh>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8  }
+    \moneyBeat cymc8 hh8 |
+    \repeat percent 2 { \moneyBeat hh8 hh8 }
   }
   \alternative {
-    \volta 1,3 { <bd hh>8  hh8  <sn hh>8  hh8  <bd hh>8  hh8  <sn hh>8  hh8 | }
+    \volta 1,3 { \moneyBeat hh8 hh8 | }
     \volta 2,4 { <bd cymc>4 r2. | }
   }
   \break

@@ -224,3 +224,6 @@ __marimo__/
 
 .vscode/
 .DS_Store
+
+# Rendered LilyPond output
+*.pdf

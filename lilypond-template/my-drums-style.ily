@@ -1,5 +1,27 @@
 \version "2.26.0"
 
+% Money beat: bass drum on beat 1, hi-hat/ride pattern on 2-4.
+% \moneyBeat <cymbal-or-hat> <hat-or-ride>
+%   first: note on beat 1 with duration (e.g. cymc8 for crash, hh8 for hi-hat)
+%   hat:   note for the hat pattern with duration (hh8 for hi-hat, cymr8 for ride)
+%
+% Durations: bake the duration into each argument (e.g. cymc8, hh8) rather
+% than appending it after $var. A bare $hat 8 would render as a whole-note
+% hat followed by a separate eighth rest, because $var substitutes a complete
+% music expression that already carries its own implicit duration.
+%
+% Chord durations: in <bd $first > and <sn $hat >, the chord takes the
+% duration of its LAST element (the parameter). So bd/sn follow the
+% parameter's duration automatically. Keep the fixed drum first and the
+% parameter last; reversing the order would make the chord default to a
+% whole note.
+moneyBeat = #(define-music-function (first hat) (ly:music? ly:music?)
+  #{
+    \drummode {
+      < bd $first > $hat < sn $hat > $hat < bd $hat > $hat < sn $hat > $hat
+    }
+  #})
+
 #(define my-drums-style
   `(
     (bassdrum        ()           #f           -3)  ; bd
