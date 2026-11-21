@@ -41,7 +41,7 @@ Comprehensive validation for song discovery insertions.
 | `validate_filename(name, field_label)` | Checks for forbidden filesystem characters and reserved names |
 | `validate_file_in_dir(file_path, allowed_dir, field_label)` | Checks file exists and is within the allowed directory |
 | `validate_no_duplicate_in_master(...)` | Checks master spreadsheet for existing artist/song pair |
-| `validate_normalized_filenames(...)` | Checks normalized file names don't conflict in staging or data folders. Accepts `artist_local`/`song_name_local` for stem generation. Uses case-insensitive collision detection. |
+| `validate_normalized_filenames(...)` | Checks normalized file names don't conflict in staging or data folders. Accepts `artist_local`/`song_name_local` for stem generation and `selected_files` to exclude the files being inserted (already at the target name). Uses case-insensitive collision detection. |
 
 **Edge cases covered**:
 - **Boolean-like**: `true`, `false`, `t`, `f`, `yes`, `no`, `on`, `off`

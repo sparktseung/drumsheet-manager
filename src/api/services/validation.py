@@ -265,11 +265,14 @@ def validate_normalized_filenames(
     extensions: list[str],
     staging_folder: str,
     data_folder: str,
+    selected_files: list[str] | None = None,
 ) -> list[str]:
     """Check that normalized file names won't conflict in staging or data.
 
     Uses the same stem logic as the actual rename step so the check
-    matches what will happen at insertion time.
+    matches what will happen at insertion time.  Files that are already
+    at the normalized target name (i.e. the files being inserted) are
+    not treated as conflicts.
     """
     errors: list[str] = []
     stem = _normalized_stem(
@@ -278,6 +281,8 @@ def validate_normalized_filenames(
         artist_local=artist_local,
         song_name_local=song_name_local,
     )
+
+    selected = {Path(p).resolve() for p in (selected_files or [])}
 
     for folder_label, folder in [
         ("staging", staging_folder),
@@ -288,10 +293,13 @@ def validate_normalized_filenames(
             continue
         for ext in extensions:
             target = root / f"{stem}{ext}"
-            if _case_insensitive_exists(target):
-                errors.append(
-                    f"'{target.name}' already exists in the"
-                    f" {folder_label} folder"
-                )
+            if not _case_insensitive_exists(target):
+                continue
+            if target.resolve() in selected:
+                continue
+            errors.append(
+                f"'{target.name}' already exists in the"
+                f" {folder_label} folder"
+            )
 
     return errors

@@ -151,13 +151,15 @@ def validate_discovery(
 
     # ── Filename conflicts in staging / data folders ──
     extensions: list[str] = []
-    if body.audio_file_path:
-        extensions.append(Path(body.audio_file_path).suffix)
-    if body.drum_sheet_file_path:
-        extensions.append(Path(body.drum_sheet_file_path).suffix)
-    if body.source_file_path:
-        extensions.append(Path(body.source_file_path).suffix)
-
+    selected_files: list[str] = []
+    for label, path in [
+        ("audio_file_path", body.audio_file_path),
+        ("drum_sheet_file_path", body.drum_sheet_file_path),
+        ("source_file_path", body.source_file_path),
+    ]:
+        if path:
+            extensions.append(Path(path).suffix)
+            selected_files.append(path)
     conflict_errors = validate_normalized_filenames(
         artist_en=artist_en,
         song_name_en=song_name_en,
@@ -172,6 +174,7 @@ def validate_discovery(
         extensions=extensions,
         staging_folder=settings.song_data_staging_folder,
         data_folder=settings.song_data_folder,
+        selected_files=selected_files,
     )
     errors.extend(conflict_errors)
 
@@ -251,12 +254,16 @@ def insert_discovered_song(
 
     # ── Validate normalized file names won't conflict ──
     extensions: list[str] = []
+    selected_files: list[str] = []
     if body.audio_file_path:
         extensions.append(Path(body.audio_file_path).suffix)
+        selected_files.append(body.audio_file_path)
     if body.drum_sheet_file_path:
         extensions.append(Path(body.drum_sheet_file_path).suffix)
+        selected_files.append(body.drum_sheet_file_path)
     if body.source_file_path:
         extensions.append(Path(body.source_file_path).suffix)
+        selected_files.append(body.source_file_path)
 
     conflict_errors = validate_normalized_filenames(
         artist_en=artist_en,
@@ -272,6 +279,7 @@ def insert_discovered_song(
         extensions=extensions,
         staging_folder=settings.song_data_staging_folder,
         data_folder=settings.song_data_folder,
+        selected_files=selected_files,
     )
     if conflict_errors:
         raise HTTPException(
@@ -435,7 +443,8 @@ def _rename_staging_files(
                 ),
             )
 
-        old_path.rename(new_path)
+        if new_path != old_path:
+            old_path.rename(new_path)
         renamed.append(
             {
                 "file_type": file_type,
